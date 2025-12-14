@@ -274,3 +274,46 @@ const chapterBosses = {
     attackFrameHeight: 64,
   },
 };
+
+function resetNewGame() {
+  // reset game
+  GlobalState.remainingTimeSec = GlobalState.chapterTimeLimit;
+  GlobalState.chapter = 1;
+  GlobalState.playerStats.maxHp = 100;
+  GlobalState.playerStats.hp = 100;
+  GlobalState.playerStats.attack = 10;
+  GlobalState.playerStats.speed = 220;
+  GlobalState.playerStats.skillPoints = 0;
+  GlobalState.playerStats.skills = { hpUp: 0, attackUp: 0, speedUp: 0 };
+}
+
+function saveGame(checkpointId = "manual") {
+  // saves game
+  const data = {
+    version: 1,
+    remainingTimeSec: GlobalState.remainingTimeSec,
+    chapter: GlobalState.chapter,
+    isSubscribed: GlobalState.isSubscribed,
+    playerStats: GlobalState.playerStats,
+    checkpointId,
+  };
+  localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+}
+
+function loadGame() {
+  // loads the saved game
+  const raw = localStorage.getItem(SAVE_KEY);
+  if (!raw) return null;
+  try {
+    const data = JSON.parse(raw);
+    if (!data || !data.version) return null;
+    GlobalState.remainingTimeSec = data.remainingTimeSec;
+    GlobalState.chapter = data.chapter;
+    GlobalState.isSubscribed = data.isSubscribed;
+    GlobalState.playerStats = data.playerStats;
+    return data;
+  } catch (e) {
+    console.error("Failed to load save data", e);
+    return null;
+  }
+}
