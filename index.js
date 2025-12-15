@@ -317,3 +317,1120 @@ function loadGame() {
     return null;
   }
 }
+
+// Boot Scene to load assets
+
+class BootScene extends Phaser.Scene {
+  constructor() {
+    super("BootScene");
+  }
+
+  preload() {
+    // Loads spritesheets
+    this.load.spritesheet("player", "assets/necromancer.png", {
+      frameWidth: 128,
+      frameHeight: 128,
+    });
+    this.load.spritesheet("enemy", "assets/NightBorne.png", {
+      frameWidth: 80,
+      frameHeight: 80,
+    });
+    this.load.spritesheet("boss", "assets/mage_guardian-red.png", {
+      frameWidth: 64,
+      frameHeight: 64,
+    });
+    for (const chapterNum in chapterBosses) {
+      const bossConfig = chapterBosses[chapterNum];
+      this.load.spritesheet(bossConfig.key, bossConfig.filename, {
+        frameWidth: bossConfig.frameWidth,
+        frameHeight: bossConfig.frameHeight,
+        transparent: 0xaa44ff, // to fix an internal bug with the background of the boss during attacking phase
+      });
+      // Loads boss attack spritesheet if different from idle, or if no dedicated attackKey is set in chapterBosses
+      if (bossConfig.attackKey) {
+        this.load.spritesheet(bossConfig.attackKey, bossConfig.attackFilename, {
+          frameWidth: bossConfig.attackFrameWidth,
+          frameHeight: bossConfig.attackFrameHeight,
+          transparent: 0xaa44ff,
+        });
+      }
+    }
+    this.load.spritesheet("boss_attack_anim_png", "assets/boss.png", {
+      frameWidth: 64,
+      frameHeight: 64,
+    });
+
+    // Loading game backgrounds depending on the chapter number currently being played
+    for (let i = 1; i <= 10; i++) {
+      let filename;
+      if (i === 1) {
+        filename = "assets/Dark_Forest_17.jpg";
+      } else if (i === 2) {
+        filename = "assets/lava_bg.jpg";
+      } else if (i === 3) {
+        filename = "assets/crimson_forge.jpg";
+      } else if (i === 4) {
+        filename = "assets/shattered_plains.png";
+      } else if (i === 5) {
+        filename = "assets/citadel.jpg";
+      } else if (i === 7) {
+        filename = "assets/OldDungeon.png";
+      } else {
+        filename = i <= 5 ? "assets/lava_bg.png" : "assets/forest_bg.png";
+      }
+      this.load.image(`bg_${i}`, filename);
+    }
+
+    // Loading static items
+    this.load.image("ground", "assets/ground.png");
+    this.load.image("bullet", "assets/bullet.png");
+    this.load.image("enemy_bullet", "assets/purple_ball.png");
+    this.load.image("portal", "assets/portal.png");
+    this.load.image("checkpoint", "assets/flag.png");
+    this.load.audio("intro_horror_sound", "sounds/horror-transition.mp3"); // Loading for Intro Scene
+    this.load.audio("evil_cue_sound", "sounds/evil-cue.mp3"); // Loading for Chapter 1
+    this.load.audio("evil_drone_sound", "sounds/evil-drone.mp3"); // Loading for MainMenuScene
+    this.load.audio("chapter2_bg_music", "sounds/old-evil-ghosts.mp3"); // Loading for Chapter 2
+    this.load.spritesheet(
+      "NightNorne_attack_png",
+      "assets/NightBorne_attack.png",
+      {
+        frameWidth: 80,
+        frameHeight: 80,
+      }
+    );
+  }
+
+  create() {
+    // Player Animations
+    this.anims.create({
+      key: "player_idle",
+      frames: this.anims.generateFrameNumbers("player", {
+        start: 0,
+        end: 0,
+      }),
+      frameRate: 1,
+      repeat: -1,
+    });
+
+    this.anims.create({
+      key: "player_run",
+      frames: this.anims.generateFrameNumbers("player", {
+        start: 1,
+        end: 3,
+      }),
+      frameRate: 10,
+      repeat: -1,
+    });
+
+    // Enemy Animations
+    this.anims.create({
+      key: "enemy_walk",
+      frames: this.anims.generateFrameNumbers("enemy", {
+        start: 0,
+        end: 1,
+      }),
+      frameRate: 4,
+      repeat: -1,
+    });
+
+    // Boss Animations
+    this.anims.create({
+      key: "boss_idle",
+      frames: this.anims.generateFrameNumbers("boss", {
+        start: 0,
+        end: 1,
+      }),
+      frameRate: 4,
+      repeat: -1,
+    });
+
+    // Boss animations for each chapter
+    for (const chapterNum in chapterBosses) {
+      const bossConfig = chapterBosses[chapterNum];
+      this.anims.create({
+        key: `${bossConfig.key}_idle`,
+        frames: this.anims.generateFrameNumbers(bossConfig.key, {
+          start: 0,
+          end: 1,
+        }),
+        frameRate: 4,
+        repeat: -1,
+      });
+
+      // Boss attack animation for each chapter
+      if (bossConfig.attackKey) {
+        this.anims.create({
+          key: bossConfig.attackKey,
+          frames: this.anims.generateFrameNumbers(bossConfig.attackKey, {
+            start: 0,
+            end: 2,
+          }),
+          frameRate: 15,
+          repeat: 0,
+        });
+      }
+    }
+
+    this.anims.create({
+      key: "boss_attack_anim",
+      frames: this.anims.generateFrameNames("boss_attack_anim_png"),
+      frameRate: 15,
+      repeat: 0,
+    });
+    this.anims.create({
+      key: "enemy_attack_gif_anim", // animation key
+      frames: this.anims.generateFrameNames("NightNorne_attack_png"),
+      frameRate: 15,
+      repeat: 0,
+    });
+
+    this.scene.start("MainMenuScene");
+  }
+}
+
+// Storyline Scene
+
+class StorylineScene extends Phaser.Scene {
+  constructor() {
+    super("StorylineScene");
+  }
+
+  init(data) {
+    this.chapter = data.chapter;
+  }
+
+  create() {
+    this.cameras.main.setBackgroundColor("#000000");
+    this.dialogueIndex = 0;
+    this.currentStoryline = storylines[this.chapter] || [];
+
+    this.dialogueText = this.add.text(50, 400, "", {
+      fontSize: "20px",
+      color: "#ffffff",
+      wordWrap: { width: 860 },
+      backgroundColor: "#000000AA",
+      padding: { x: 10, y: 10 },
+    });
+    this.speakerText = this.add.text(50, 370, "", {
+      fontSize: "24px",
+      color: "#ffff00",
+      backgroundColor: "#000000AA",
+      padding: { x: 10, y: 5 },
+    });
+    this.continueText = this.add
+      .text(800, 500, "Press ENTER", {
+        fontSize: "16px",
+        color: "#cccccc",
+      })
+      .setOrigin(0.5);
+
+    this.input.keyboard.on("keydown-ENTER", this.advanceDialogue, this);
+    this.input.on("pointerdown", this.advanceDialogue, this);
+
+    this.isAnimatingText = false; // Flag to check if text is currently animating
+    this.typewriterTimer = null; // To hold the timed event for animation
+
+    this.showDialogue();
+  }
+
+  showDialogue() {
+    if (this.dialogueIndex < this.currentStoryline.length) {
+      const line = this.currentStoryline[this.dialogueIndex];
+      this.speakerText.setText(line.speaker);
+      this.typewriteText(line.text); // Animate text
+    } else {
+      // Storyline finished, start the game
+      this.scene.start("GameScene");
+    }
+  }
+
+  advanceDialogue() {
+    if (this.isAnimatingText) {
+      // If text is animating, skip to end of current line
+      if (this.typewriterTimer) {
+        this.typewriterTimer.remove();
+      }
+      // Ensure dialogueIndex is valid before accessing currentStoryline
+      if (this.dialogueIndex < this.currentStoryline.length) {
+        this.dialogueText.setText(
+          this.currentStoryline[this.dialogueIndex].text
+        ); // Show full text of current line
+      }
+      this.isAnimatingText = false;
+    } else {
+      // If not animating, advance to next dialogue line or end storyline
+      this.dialogueIndex++;
+      this.showDialogue();
+    }
+  }
+
+  typewriteText(text) {
+    this.isAnimatingText = true;
+    this.dialogueText.setText(""); // Clear current text
+    const length = text.length;
+    let i = 0;
+    this.typewriterTimer = this.time.addEvent({
+      callback: () => {
+        this.dialogueText.setText(this.dialogueText.text + text[i]);
+        i++;
+        if (i === length) {
+          this.isAnimatingText = false;
+          this.typewriterTimer.remove();
+        }
+      },
+      callbackScope: this,
+      delay: 50, // Adjust this value for typing speed
+      loop: true,
+    });
+  }
+}
+
+// Intro Scene
+
+class IntroScene extends Phaser.Scene {
+  constructor() {
+    super("IntroScene");
+  }
+
+  create() {
+    this.cameras.main.setBackgroundColor("#000000");
+
+    this.introSound = this.sound.add("intro_horror_sound", {
+      loop: true,
+    });
+    this.introSound.play();
+
+    const introDisplay = this.add
+      .text(480, 540, introText.text, {
+        fontSize: "24px",
+        color: "#ffff00",
+        align: "center",
+        wordWrap: { width: 800 },
+      })
+      .setOrigin(0.5, 0);
+
+    this.tweens.add({
+      targets: introDisplay,
+      y: -introDisplay.height - 100, // Scroll up and off-screen
+      scale: 0.1, // Fade into distance
+      alpha: 0, // Fade out
+      duration: 50000,
+      ease: "Linear",
+      onComplete: () => {
+        this.introSound.stop();
+        this.scene.start("StorylineScene", {
+          chapter: GlobalState.chapter,
+        });
+      },
+    });
+
+    // Allowing skipping the intro scene
+    this.input.keyboard.on("keydown-ENTER", () => {
+      this.introSound.stop();
+      this.scene.stop();
+      this.scene.start("StorylineScene", {
+        chapter: GlobalState.chapter,
+      });
+    });
+    this.input.on("pointerdown", () => {
+      this.introSound.stop();
+      this.scene.stop();
+      this.scene.start("StorylineScene", {
+        chapter: GlobalState.chapter,
+      });
+    });
+  }
+}
+
+// Main Menu Scene
+
+class MainMenuScene extends Phaser.Scene {
+  constructor() {
+    super("MainMenuScene");
+  }
+
+  create() {
+    this.cameras.main.setBackgroundColor("#150018");
+
+    // Resuming audio on user interaction
+    if (
+      this.sys.game.device.input.touch &&
+      this.sys.game.device.input.touch.is_touched
+    ) {
+      // For mobile phones
+      if (this.sys.game.audio.context.state === "suspended") {
+        this.sys.game.audio.context.resume();
+      }
+    }
+
+    // Adding an input listener to resume audio context on any user interaction
+    this.input.once("pointerdown", () => {
+      if (this.sys.game.audio.context.state === "suspended") {
+        this.sys.game.audio.context.resume();
+      }
+    });
+    this.input.keyboard.once("keydown", () => {
+      if (this.sys.game.audio.context.state === "suspended") {
+        this.sys.game.audio.context.resume();
+      }
+    });
+
+    if (this.menuMusic) {
+      this.menuMusic.stop();
+    }
+    this.menuMusic = this.sound.add("evil_drone_sound", { loop: true });
+    this.menuMusic.play();
+
+    this.add
+      .text(480, 60, "Demon Reborn: Arishem's Time", {
+        fontSize: "28px",
+        color: "#ffffff",
+      })
+      .setOrigin(0.5);
+
+    this.menuItems = [
+      "Play",
+      "Load Game",
+      "Subscription",
+      "Options",
+      "Credits",
+    ];
+    this.selectedIndex = 0;
+    this.menuTexts = [];
+
+    for (let i = 0; i < this.menuItems.length; i++) {
+      const t = this.add
+        .text(480, 160 + i * 40, "", {
+          fontSize: "20px",
+          color: "#dddddd",
+        })
+        .setOrigin(0.5);
+      this.menuTexts.push(t);
+    }
+
+    this.infoText = this.add
+      .text(480, 430, "", {
+        fontSize: "16px",
+        color: "#ffff88",
+        wordWrap: { width: 800 },
+      })
+      .setOrigin(0.5);
+    this.updateMenuVisuals("Use UP/DOWN and ENTER");
+
+    this.cursors = this.input.keyboard.createCursorKeys();
+    this.enterKey = this.input.keyboard.addKey(
+      Phaser.Input.Keyboard.KeyCodes.ENTER
+    );
+
+    this.input.keyboard.on("keydown-UP", () => {
+      this.selectedIndex =
+        (this.selectedIndex - 1 + this.menuItems.length) %
+        this.menuItems.length;
+      this.updateMenuVisuals();
+    });
+
+    this.input.keyboard.on("keydown-DOWN", () => {
+      this.selectedIndex = (this.selectedIndex + 1) % this.menuItems.length;
+      this.updateMenuVisuals();
+    });
+
+    this.enterKey.on("down", () => this.handleSelect());
+  }
+
+  updateMenuVisuals(extraInfo) {
+    for (let i = 0; i < this.menuItems.length; i++) {
+      const prefix = i === this.selectedIndex ? "> " : "  ";
+      this.menuTexts[i].setText(prefix + this.menuItems[i]);
+    }
+    const subStatus = GlobalState.isSubscribed ? "ACTIVE" : "LOCKED"; // Handling subscription
+    this.infoText.setText(
+      (extraInfo || "") +
+        `\nSubscription: ${subStatus}\nChapters 4-10 require subscription.`
+    );
+  }
+
+  handleSelect() {
+    const choice = this.menuItems[this.selectedIndex];
+    if (choice === "Play") {
+      resetNewGame();
+
+      // Explicitly resetting currentCheckpoint when starting a new game
+      this.scene.get("GameScene").currentCheckpoint = null;
+
+      if (GlobalState.chapter > 3 && !GlobalState.isSubscribed) {
+        this.updateMenuVisuals("Subscription required!");
+      } else {
+        // Stopping menu music before starting another scene
+        if (this.menuMusic) {
+          this.menuMusic.stop();
+        }
+        // Starting Intro Scene only for Chapter 1, otherwise go to StorylineScene
+        if (GlobalState.chapter === 1) {
+          this.scene.start("IntroScene");
+        } else {
+          this.scene.start("StorylineScene", {
+            chapter: GlobalState.chapter,
+          });
+        }
+      }
+    } else if (choice === "Load Game") {
+      if (loadGame()) {
+        // Stopping menu music before starting another scene
+        if (this.menuMusic) {
+          this.menuMusic.stop();
+        }
+        this.scene.start("GameScene");
+      } else this.updateMenuVisuals("No save file found.");
+    } else if (choice === "Subscription") {
+      GlobalState.isSubscribed = !GlobalState.isSubscribed;
+      this.updateMenuVisuals(
+        GlobalState.isSubscribed ? "Subscribed!" : "Unsubscribed."
+      );
+    } else if (choice === "Options") {
+      this.updateMenuVisuals(
+        "Options: In a full game you can adjust audio, controls, etc."
+      );
+    } else if (choice === "Credits") {
+      this.updateMenuVisuals(
+        "Credits: Saransh Golash (Game Designer) and Phaser (Engine).\nCopyright Demon Reborn: Arishem's Time @2025"
+      );
+    }
+  }
+}
+
+// UI Scene
+
+class UIScene extends Phaser.Scene {
+  constructor() {
+    super("UIScene");
+  }
+
+  create() {
+    this.timerText = this.add.text(10, 10, "", {
+      fontSize: "18px",
+      color: "#ffffff",
+    });
+    this.hpText = this.add.text(10, 34, "", {
+      fontSize: "18px",
+      color: "#ff6666",
+    });
+    this.chapterText = this.add.text(10, 58, "", {
+      fontSize: "18px",
+      color: "#88ff88",
+    });
+    this.gameScene = this.scene.get("GameScene");
+  }
+
+  formatTime(sec) {
+    sec = Math.max(0, Math.floor(sec));
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+  }
+
+  update(time, delta) {
+    if (!this.gameScene) return;
+
+    // Global time countdown
+    if (GlobalState.remainingTimeSec > 0) {
+      GlobalState.remainingTimeSec -= delta / 1000;
+    }
+
+    if (GlobalState.remainingTimeSec <= 0) {
+      GlobalState.remainingTimeSec = 0;
+      this.scene.stop("GameScene");
+      this.scene.start("GameOverScene", { reason: "time" });
+      return;
+    }
+
+    this.timerText.setText(
+      "Time Left: " + this.formatTime(GlobalState.remainingTimeSec)
+    );
+    this.hpText.setText(
+      `HP: ${Math.round(this.gameScene.playerHp)}/${
+        GlobalState.playerStats.maxHp
+      }`
+    );
+    this.chapterText.setText(`Chapter: ${GlobalState.chapter}`);
+  }
+}
+
+// Pause Scene
+
+class PauseScene extends Phaser.Scene {
+  constructor() {
+    super("PauseScene");
+  }
+
+  create() {
+    this.add.rectangle(480, 270, 960, 540, 0x000000, 0.85);
+
+    this.add
+      .text(480, 100, "GAME PAUSED", {
+        fontSize: "40px",
+        color: "#ff0",
+        fontStyle: "bold",
+      })
+      .setOrigin(0.5);
+
+    const createButton = (x, y, text, callback) => {
+      const t = this.add
+        .text(x, y, text, {
+          fontSize: "28px",
+          color: "#fff",
+          backgroundColor: "#333",
+          padding: { x: 10, y: 5 },
+        })
+        .setOrigin(0.5)
+        .setInteractive({ useHandCursor: true });
+
+      t.on("pointerover", () => t.setStyle({ color: "#0f0" }));
+      t.on("pointerout", () => t.setStyle({ color: "#fff" }));
+      t.on("pointerdown", callback);
+      return t;
+    };
+
+    createButton(480, 180, "RESUME GAME", () => {
+      this.scene.resume("GameScene");
+      this.scene.resume("UIScene");
+      this.scene.stop();
+    });
+
+    createButton(480, 250, "SAVE GAME", () => {
+      const gameScene = this.scene.get("GameScene");
+      const cpId = gameScene.currentCheckpoint
+        ? gameScene.currentCheckpoint.id
+        : "manual_pause";
+      saveGame(cpId);
+
+      const txt = this.add
+        .text(480, 290, "Game Saved!", { color: "#0f0" })
+        .setOrigin(0.5);
+      this.time.delayedCall(1000, () => txt.destroy());
+    });
+
+    this.chapterContainer = this.add.container(0, 0).setVisible(false);
+    createButton(480, 320, "CHAPTER SELECT", () => {
+      this.chapterContainer.setVisible(!this.chapterContainer.visible);
+    });
+
+    for (let i = 1; i <= 10; i++) {
+      const cx = 300 + ((i - 1) % 5) * 90;
+      const cy = 370 + Math.floor((i - 1) / 5) * 50;
+      const btn = this.add
+        .text(cx, cy, `[${i}]`, { fontSize: "24px", color: "#88ff88" })
+        .setOrigin(0.5)
+        .setInteractive({ useHandCursor: true });
+      btn.on("pointerdown", () => {
+        if (i > 3 && !GlobalState.isSubscribed) {
+          alert("Chapter Locked! Subscribe first.");
+        } else {
+          GlobalState.chapter = i;
+          GlobalState.remainingTimeSec = GlobalState.chapterTimeLimit;
+          const gameScene = this.scene.get("GameScene");
+          gameScene.currentCheckpoint = null;
+          gameScene.scene.restart();
+          this.scene.resume("UIScene");
+          this.scene.stop();
+        }
+      });
+      this.chapterContainer.add(btn);
+    }
+
+    createButton(480, 480, "MAIN MENU", () => {
+      const gameScene = this.scene.get("GameScene");
+      if (
+        gameScene &&
+        gameScene.chapterMusic &&
+        gameScene.chapterMusic.isPlaying
+      ) {
+        gameScene.chapterMusic.stop();
+      }
+      // If there's a bossIntroSound, stop it as well if it's playing
+      if (
+        gameScene &&
+        gameScene.bossIntroSound &&
+        gameScene.bossIntroSound.isPlaying
+      ) {
+        gameScene.bossIntroSound.stop();
+      }
+      this.scene.stop("GameScene");
+      this.scene.stop("UIScene");
+      this.scene.start("MainMenuScene");
+    });
+
+    this.input.keyboard.on("keydown-ESC", () => {
+      this.scene.resume("GameScene");
+      this.scene.resume("UIScene");
+      this.scene.stop();
+    });
+  }
+}
+
+// Game Scene
+
+class GameScene extends Phaser.Scene {
+  constructor() {
+    super("GameScene");
+  }
+
+  create() {
+    this.levelWidth = 2400;
+    this.physics.world.setBounds(0, 0, this.levelWidth, 540);
+    this.cameras.main.setBounds(0, 0, this.levelWidth, 540);
+
+    // Stopping intro music if it's still playing
+    const introScene = this.scene.get("IntroScene");
+    if (
+      introScene &&
+      introScene.introSound &&
+      introScene.introSound.isPlaying
+    ) {
+      introScene.introSound.stop();
+    }
+
+    // Playing chapter music
+    if (this.chapterMusic) {
+      this.chapterMusic.stop();
+    }
+
+    if (GlobalState.chapter === 1) {
+      this.chapterMusic = this.sound.add("evil_cue_sound", {
+        loop: true,
+      });
+      this.chapterMusic.play();
+    } else if (GlobalState.chapter === 2) {
+      this.chapterMusic = this.sound.add("chapter2_bg_music", {
+        loop: true,
+      });
+      this.chapterMusic.play();
+    } else {
+      this.chapterMusic = null;
+    }
+
+    // Adding chapter backgrounds
+    const bgKey = `bg_${Math.min(GlobalState.chapter, 10)}`;
+    // Locking camera
+    this.background = this.add
+      .tileSprite(0, 0, 960, 540, bgKey)
+      .setOrigin(0, 0)
+      .setScrollFactor(0);
+    this.background.displayWidth = this.game.config.width;
+    this.background.displayHeight = this.game.config.height;
+
+    this.platforms = this.physics.add.staticGroup();
+    this.platforms
+      .create(this.levelWidth / 2, 520, "ground")
+      .setDisplaySize(this.levelWidth, 40)
+      .refreshBody();
+
+    let startX = 100;
+    if (this.currentCheckpoint) startX = this.currentCheckpoint.x;
+
+    this.player = this.physics.add.sprite(startX, 400, "player");
+    this.player.setCollideWorldBounds(true);
+    this.playerHp = GlobalState.playerStats.hp;
+
+    this.physics.add.collider(this.player, this.platforms);
+    this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
+
+    this.cursors = this.input.keyboard.createCursorKeys();
+    this.attackKey = this.input.keyboard.addKey(
+      Phaser.Input.Keyboard.KeyCodes.SPACE
+    );
+    this.saveKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S);
+
+    this.input.keyboard.on("keydown-ESC", () => {
+      this.scene.pause();
+      this.scene.pause("UIScene");
+      this.scene.launch("PauseScene");
+    });
+
+    this.bullets = this.physics.add.group({ allowGravity: false });
+    this.enemyBullets = this.physics.add.group({ allowGravity: false });
+
+    this.enemies = this.physics.add.group();
+    this.boss = null;
+    this.spawnEnemiesAndBoss();
+
+    // Collisions
+    this.physics.add.collider(this.enemies, this.platforms);
+    this.physics.add.overlap(
+      this.player,
+      this.enemies,
+      this.onPlayerHitEnemyBody,
+      null,
+      this
+    );
+    this.physics.add.overlap(
+      this.player,
+      this.enemyBullets,
+      this.onPlayerHitMagic,
+      null,
+      this
+    );
+    this.physics.add.overlap(
+      this.bullets,
+      this.enemies,
+      this.onBulletHitEnemy,
+      null,
+      this
+    );
+
+    this.checkpoints = this.physics.add.staticGroup();
+    if (!this.currentCheckpoint)
+      this.currentCheckpoint = { x: 100, y: 400, id: "start" };
+
+    this.createCheckpoint(400, 460, "cp1");
+    this.createCheckpoint(1200, 460, "cp2");
+    this.createCheckpoint(1900, 460, "cp3");
+    this.physics.add.overlap(
+      this.player,
+      this.checkpoints,
+      this.onReachCheckpoint,
+      null,
+      this
+    );
+
+    this.portal = this.physics.add.staticSprite(
+      this.levelWidth - 80,
+      455,
+      "portal"
+    );
+    this.physics.add.overlap(
+      this.player,
+      this.portal,
+      this.onReachPortal,
+      null,
+      this
+    );
+
+    this.scene.launch("UIScene");
+  }
+
+  spawnEnemiesAndBoss() {
+    const numEnemies = 15 + GlobalState.chapter;
+    for (let i = 0; i < numEnemies; i++) {
+      const x = 300 + i * 180;
+      const enemy = this.enemies.create(x, 450, "enemy");
+      enemy.setCollideWorldBounds(true);
+      enemy.setBounce(0.2);
+      enemy.hp = 20 + GlobalState.chapter * 5;
+      enemy.isBoss = false;
+      enemy.attackCooldown = 0;
+      enemy.speed = 60;
+
+      // Start Animation
+      enemy.play("enemy_walk");
+      enemy.body.id = `enemy_${i}_chap${GlobalState.chapter}`; // Assigning unique ID
+    }
+
+    const currentBossConfig =
+      chapterBosses[GlobalState.chapter] || chapterBosses[1]; // Default to chapter 1 boss if not found
+
+    this.boss = this.enemies.create(
+      this.levelWidth - 200,
+      440,
+      currentBossConfig.key
+    );
+    this.boss.setCollideWorldBounds(true);
+    this.boss.hp = 100 + GlobalState.chapter * 30;
+    this.boss.isBoss = true;
+    this.boss.attackCooldown = 0;
+    this.boss.speed = 90;
+
+    // Start Animation
+    this.boss.play(`${currentBossConfig.key}_idle`);
+    this.boss.body.id = `boss_chap${GlobalState.chapter}`; // Assigning unique ID
+  }
+
+  createCheckpoint(x, y, id) {
+    const cp = this.checkpoints.create(x, y, "checkpoint");
+    cp.checkpointId = id;
+  }
+
+  onReachCheckpoint(player, checkpoint) {
+    this.currentCheckpoint = {
+      x: checkpoint.x,
+      y: checkpoint.y - 20,
+      id: checkpoint.checkpointId,
+    };
+    this.showFloatingText(checkpoint.x, checkpoint.y - 60, "Checkpoint!");
+    checkpoint.disableBody(true, true);
+  }
+
+  onReachPortal(player, portal) {
+    if (this.boss && this.boss.active) {
+      this.showFloatingText(portal.x, portal.y - 80, "Defeat Boss First!");
+      return;
+    }
+
+    if (GlobalState.chapter >= GlobalState.totalChapters) {
+      this.scene.start("GameOverScene", { reason: "victory" });
+    } else {
+      GlobalState.chapter += 1;
+      if (GlobalState.chapter > 3 && !GlobalState.isSubscribed) {
+        this.scene.start("GameOverScene", { reason: "subscription" });
+        return;
+      }
+      GlobalState.remainingTimeSec = GlobalState.chapterTimeLimit;
+      this.currentCheckpoint = { x: 100, y: 400, id: "start" };
+
+      if (this.chapterMusic && this.chapterMusic.isPlaying) {
+        this.chapterMusic.stop(); // Stopping current chapter music
+      }
+      // If there's a bossIntroSound, stopping it as well if it was playing
+      if (
+        GlobalState.chapter === 1 &&
+        this.bossIntroSound &&
+        this.bossIntroSound.isPlaying
+      ) {
+        this.bossIntroSound.stop(); // safety check
+      }
+
+      // Checks if there's a storyline for the next chapter
+      if (storylines[GlobalState.chapter]) {
+        this.scene.start("StorylineScene", {
+          chapter: GlobalState.chapter,
+        });
+      } else {
+        this.scene.restart();
+      }
+    }
+  }
+
+  update(time, delta) {
+    // We shift the texture of the TileSprite based on camera scroll
+    this.background.tilePositionX = this.cameras.main.scrollX * 0.5;
+
+    // Player Movement & Animation
+    if (this.cursors.left.isDown) {
+      this.player.setVelocityX(-200);
+      this.player.flipX = true;
+      this.player.anims.play("player_run", true);
+    } else if (this.cursors.right.isDown) {
+      this.player.setVelocityX(200);
+      this.player.flipX = false;
+      this.player.anims.play("player_run", true);
+    } else {
+      this.player.setVelocityX(0);
+      this.player.anims.play("player_idle", true);
+    }
+
+    if (this.cursors.up.isDown && this.player.body.onFloor()) {
+      this.player.setVelocityY(-420);
+    }
+
+    if (Phaser.Input.Keyboard.JustDown(this.attackKey)) this.fireBullet();
+    if (Phaser.Input.Keyboard.JustDown(this.saveKey)) {
+      saveGame(this.currentCheckpoint.id);
+      this.showFloatingText(this.player.x, this.player.y - 50, "Saved!");
+    }
+
+    this.enemies.children.each((enemy) => {
+      if (enemy.active) this.updateEnemyAI(enemy, delta);
+    });
+  }
+
+  updateEnemyAI(enemy, delta) {
+    if (enemy.attackCooldown > 0) enemy.attackCooldown -= delta;
+    const dist = Phaser.Math.Distance.Between(
+      enemy.x,
+      enemy.y,
+      this.player.x,
+      this.player.y
+    );
+
+    // Face the player
+    enemy.flipX = this.player.x < enemy.x;
+
+    // Chase
+    if (dist < 400 && dist > 50) {
+      if (this.player.x < enemy.x) enemy.setVelocityX(-enemy.speed);
+      else enemy.setVelocityX(enemy.speed);
+    } else {
+      enemy.setVelocityX(0);
+    }
+
+    // Magic Attack
+    if (dist < 300 && dist > 100 && enemy.attackCooldown <= 0) {
+      this.enemyFireMagic(enemy);
+      enemy.attackCooldown = 2000;
+    }
+  }
+
+  enemyFireMagic(enemy) {
+    if (enemy.isBoss) {
+      const currentBossConfig =
+        chapterBosses[GlobalState.chapter] || chapterBosses[1];
+      const bossAttackAnimKey =
+        currentBossConfig.attackKey || `${currentBossConfig.key}_idle`; // Fallback to idle if no attack animation specified
+
+      enemy.play(bossAttackAnimKey);
+      enemy.once(`animationcomplete-${bossAttackAnimKey}`, () => {
+        if (enemy.active) {
+          enemy.play(`${currentBossConfig.key}_idle`);
+        }
+      });
+    } else {
+      enemy.play("enemy_attack_gif_anim");
+
+      // Use 'onComplete' to switch back to the 'enemy_walk' animation after the attack animation finishes.
+      enemy.once("animationcomplete-enemy_attack_gif_anim", () => {
+        if (enemy.active) {
+          // Only switch back if the enemy is still alive
+          enemy.play("enemy_walk");
+        }
+      });
+    }
+    const bullet = this.enemyBullets.create(enemy.x, enemy.y, "enemy_bullet");
+    this.physics.moveToObject(bullet, this.player, 250);
+    bullet.lifespan = 2000;
+  }
+
+  onPlayerHitEnemyBody(player, enemy) {
+    if (enemy.attackCooldown <= 0) {
+      this.takeDamage(10); // All normal enemies deal 10 damage
+      enemy.attackCooldown = 1000;
+      if (player.x < enemy.x) player.setVelocityX(-300);
+      else player.setVelocityX(300);
+    }
+  }
+
+  onPlayerHitMagic(player, bullet) {
+    bullet.destroy();
+    this.takeDamage(15);
+  }
+
+  takeDamage(amount) {
+    this.playerHp -= amount;
+    this.showFloatingText(this.player.x, this.player.y - 40, `-${amount} HP`);
+    this.cameras.main.shake(100, 0.01);
+
+    if (this.playerHp <= 0) {
+      this.handlePlayerDeath();
+    }
+  }
+
+  handlePlayerDeath() {
+    GlobalState.remainingTimeSec -= GlobalState.deathPenaltySec;
+    if (GlobalState.remainingTimeSec <= 0) {
+      GlobalState.remainingTimeSec = 0;
+      this.scene.start("GameOverScene", { reason: "time" });
+    } else {
+      this.playerHp = GlobalState.playerStats.maxHp;
+      this.player.setPosition(
+        this.currentCheckpoint.x,
+        this.currentCheckpoint.y
+      );
+      this.player.setVelocity(0, 0);
+      const alert = this.add
+        .text(this.player.x, this.player.y - 80, "-10 MINS (TIME WARP)!", {
+          fontSize: "20px",
+          color: "#ff0000",
+          backgroundColor: "#000",
+        })
+        .setOrigin(0.5);
+      this.time.delayedCall(2000, () => alert.destroy());
+    }
+  }
+
+  onBulletHitEnemy(bullet, enemy) {
+    bullet.destroy();
+    enemy.hp -= GlobalState.playerStats.attack;
+    this.showFloatingText(
+      enemy.x,
+      enemy.y - 30,
+      `-${GlobalState.playerStats.attack}`
+    );
+    if (enemy.hp <= 0) {
+      enemy.destroy();
+    }
+  }
+
+  fireBullet() {
+    const bullet = this.bullets.create(this.player.x, this.player.y, "bullet");
+    const dir = this.player.flipX ? -1 : 1;
+    bullet.body.velocity.x = dir * 400;
+    this.time.delayedCall(1000, () => bullet.destroy());
+  }
+
+  showFloatingText(x, y, txt) {
+    const t = this.add
+      .text(x, y, txt, {
+        fontSize: "14px",
+        color: "#fff",
+        stroke: "#000",
+        strokeThickness: 2,
+      })
+      .setOrigin(0.5);
+    this.tweens.add({
+      targets: t,
+      y: y - 40,
+      alpha: 0,
+      duration: 1000,
+      onComplete: () => t.destroy(),
+    });
+  }
+}
+
+// Game Over Scene
+
+class GameOverScene extends Phaser.Scene {
+  constructor() {
+    super("GameOverScene");
+  }
+  init(data) {
+    this.reason = data.reason || "time";
+  }
+
+  create() {
+    this.cameras.main.setBackgroundColor("#000");
+    let msg = "";
+    if (this.reason === "time")
+      msg = "TIME EXPIRED\nArishem consumed your timeline.";
+    else if (this.reason === "subscription")
+      msg = "LOCKED\nSubscribe to proceed.";
+    else if (this.reason === "victory")
+      msg = "VICTORY\nYou escaped the Demon World!";
+
+    this.add
+      .text(480, 300, msg, {
+        fontSize: "32px",
+        color: "#f00",
+        align: "center",
+      })
+      .setOrigin(0.5);
+    this.add
+      .text(480, 450, "Press ENTER to Menu", { fontSize: "20px" })
+      .setOrigin(0.5);
+
+    this.input.keyboard.on("keydown-ENTER", () =>
+      this.scene.start("MainMenuScene")
+    );
+  }
+}
+
+const config = {
+  type: Phaser.AUTO,
+  width: 960,
+  height: 540,
+  pixelArt: false,
+  physics: {
+    default: "arcade",
+    arcade: { gravity: { y: 800 }, debug: false },
+  },
+  scene: [
+    BootScene,
+    MainMenuScene,
+    StorylineScene,
+    IntroScene,
+    GameScene,
+    UIScene,
+    PauseScene,
+    GameOverScene,
+  ],
+};
+
+const game = new Phaser.Game(config);
