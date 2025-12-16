@@ -1041,6 +1041,14 @@ class GameScene extends Phaser.Scene {
     );
     this.saveKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S);
 
+    // WASD keys
+    this.wasd = {
+      up: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W),
+      left: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A),
+      down: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S),
+      right: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D),
+    };
+
     this.input.keyboard.on("keydown-ESC", () => {
       this.scene.pause();
       this.scene.pause("UIScene");
@@ -1205,12 +1213,12 @@ class GameScene extends Phaser.Scene {
     this.background.tilePositionX = this.cameras.main.scrollX * 0.5;
 
     // Player Movement & Animation
-    if (this.cursors.left.isDown) {
-      this.player.setVelocityX(-200);
+    if (this.cursors.left.isDown || this.wasd.left.isDown) {
+      this.player.setVelocityX(-GlobalState.playerStats.speed);
       this.player.flipX = true;
       this.player.anims.play("player_run", true);
-    } else if (this.cursors.right.isDown) {
-      this.player.setVelocityX(200);
+    } else if (this.cursors.right.isDown || this.wasd.right.isDown) {
+      this.player.setVelocityX(GlobalState.playerStats.speed);
       this.player.flipX = false;
       this.player.anims.play("player_run", true);
     } else {
@@ -1218,8 +1226,15 @@ class GameScene extends Phaser.Scene {
       this.player.anims.play("player_idle", true);
     }
 
-    if (this.cursors.up.isDown && this.player.body.onFloor()) {
+    if (
+      (this.cursors.up.isDown || this.wasd.up.isDown) &&
+      this.player.body.onFloor()
+    ) {
       this.player.setVelocityY(-420);
+    }
+
+    if (this.wasd.down.isDown && !this.player.body.onFloor()) {
+      this.player.setVelocityY(GlobalState.playerStats.speed);
     }
 
     if (Phaser.Input.Keyboard.JustDown(this.attackKey)) this.fireBullet();
