@@ -14,6 +14,7 @@ const GlobalState = {
     speed: 220,
     skillPoints: 0,
     skills: { hpUp: 0, attackUp: 0, speedUp: 0 },
+    mana: 100, // mana for time abilities
   },
   storylineChapterIndex: 0, // For tracking which part of the storyline gets played depending on the current chapter
 };
@@ -460,11 +461,15 @@ class BootScene extends Phaser.Scene {
 
       // Boss attack animation for each chapter
       if (bossConfig.attackKey) {
+        let endFrame = 2;
+        if (bossConfig.attackFilename === "assets/boss.png") {
+          endFrame = 0;
+        }
         this.anims.create({
           key: bossConfig.attackKey,
           frames: this.anims.generateFrameNumbers(bossConfig.attackKey, {
             start: 0,
-            end: 2,
+            end: endFrame,
           }),
           frameRate: 15,
           repeat: 0,
@@ -705,7 +710,23 @@ class MainMenuScene extends Phaser.Scene {
           fontSize: "20px",
           color: "#dddddd",
         })
-        .setOrigin(0.5);
+        .setOrigin(0.5)
+        .setInteractive({ useHandCursor: true }); // Enabling interactivity
+      t.on("pointerdown", () => {
+        this.selectedIndex = i; // Setting selected index to the clicked item
+        this.updateMenuVisuals(); // Updating visuals to highlight clicked item
+        this.handleSelect(); // Handles the selection
+      });
+      t.on("pointerover", () => {
+        this.selectedIndex = i;
+        this.updateMenuVisuals();
+      }); // Updates visuals on hover
+      t.on("pointerout", () => {
+        // Resets visual if not selected
+        if (this.selectedIndex === i) {
+          this.updateMenuVisuals();
+        }
+      });
       this.menuTexts.push(t);
     }
 
@@ -741,7 +762,9 @@ class MainMenuScene extends Phaser.Scene {
   updateMenuVisuals(extraInfo) {
     for (let i = 0; i < this.menuItems.length; i++) {
       const prefix = i === this.selectedIndex ? "> " : "  ";
-      this.menuTexts[i].setText(prefix + this.menuItems[i]);
+      this.menuTexts[i]
+        .setText(prefix + this.menuItems[i])
+        .setStyle({ color: i === this.selectedIndex ? "#ffffff" : "#dddddd" });
     }
     const subStatus = GlobalState.isSubscribed ? "ACTIVE" : "LOCKED"; // Handling subscription
     this.infoText.setText(
@@ -819,6 +842,10 @@ class UIScene extends Phaser.Scene {
       fontSize: "18px",
       color: "#88ff88",
     });
+    this.manaText = this.add.text(10, 82, "", {
+      fontSize: "18px",
+      color: "#8888ff",
+    });
     this.gameScene = this.scene.get("GameScene");
   }
 
@@ -853,6 +880,7 @@ class UIScene extends Phaser.Scene {
       }`
     );
     this.chapterText.setText(`Chapter: ${GlobalState.chapter}`);
+    this.manaText.setText(`Mana: ${Math.round(GlobalState.playerStats.mana)}`);
   }
 }
 
@@ -1040,6 +1068,16 @@ class GameScene extends Phaser.Scene {
       Phaser.Input.Keyboard.KeyCodes.SPACE
     );
     this.saveKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S);
+    this.shiftKey = this.input.keyboard.addKey(
+      Phaser.Input.Keyboard.KeyCodes.SHIFT
+    );
+    this.isTimeSlowed = false;
+
+    this.positionHistory = []; // Array storing {x, y, hp, time}
+    this.recordTimer = 0;
+    this.rewindKey = this.input.keyboard.addKey(
+      Phaser.Input.Keyboard.KeyCodes.R
+    );
 
     // WASD keys
     this.wasd = {
@@ -1212,7 +1250,40 @@ class GameScene extends Phaser.Scene {
     // We shift the texture of the TileSprite based on camera scroll
     this.background.tilePositionX = this.cameras.main.scrollX * 0.5;
 
+    const totalTime = GlobalState.chapterTimeLimit;
+    const remaining = GlobalState.remainingTimeSec;
+    const percentLeft = remaining / totalTime;
+
+    // Changing the color shades from Normal (White) to "End of Times" (Red/Dark) to show urgency
+    if (this.background) {
+      // 0xFFFFFF 0xFF5555
+      const r = Math.floor(255 * percentLeft + 255 * (1 - percentLeft)); // simple fade logic example
+      const gb = Math.floor(255 * percentLeft); // Green and Blue fade out
+
+      // Apply tint to background
+      const color = Phaser.Display.Color.GetColor(255, gb, gb);
+      this.background.setTint(color);
+    }
+
     // Player Movement & Animation
+    if (this.shiftKey.isDown && GlobalState.playerStats.mana > 0) {
+      if (!this.isTimeSlowed) {
+        this.isTimeSlowed = true;
+        this.physics.world.timeScale = 3.0;
+        this.player.anims.timeScale = 3.0;
+      }
+      GlobalState.playerStats.mana -= 0.5;
+    } else {
+      if (this.isTimeSlowed) {
+        this.isTimeSlowed = false;
+        this.physics.world.timeScale = 1.0;
+        this.player.anims.timeScale = 1.0;
+      }
+      if (GlobalState.playerStats.mana < 100) {
+        GlobalState.playerStats.mana += 0.1;
+      }
+    }
+
     if (this.cursors.left.isDown || this.wasd.left.isDown) {
       this.player.setVelocityX(-GlobalState.playerStats.speed);
       this.player.flipX = true;
@@ -1243,6 +1314,33 @@ class GameScene extends Phaser.Scene {
       this.showFloatingText(this.player.x, this.player.y - 50, "Saved!");
     }
 
+    this.recordTimer += delta;
+    if (this.recordTimer > 100) {
+      this.positionHistory.push({
+        x: this.player.x,
+        y: this.player.y,
+        hp: this.playerHp,
+      });
+      // keeps the last position history only upto 3 seconds
+      if (this.positionHistory.length > 30) this.positionHistory.shift();
+      this.recordTimer = 0;
+    }
+
+    if (
+      Phaser.Input.Keyboard.JustDown(this.rewindKey) &&
+      this.positionHistory.length > 0
+    ) {
+      GlobalState.remainingTimeSec -= 120; // Cost of rewinding time is 2 minutes
+
+      const oldState = this.positionHistory[0];
+      this.player.setPosition(oldState.x, oldState.y);
+      this.playerHp = oldState.hp;
+      this.positionHistory = [];
+
+      this.cameras.main.flash(500, 0, 255, 255); // Cyan flash for time travel
+      this.showFloatingText(this.player.x, this.player.y, "TIME REWIND!");
+    }
+
     this.enemies.children.each((enemy) => {
       if (enemy.active) this.updateEnemyAI(enemy, delta);
     });
@@ -1250,6 +1348,16 @@ class GameScene extends Phaser.Scene {
 
   updateEnemyAI(enemy, delta) {
     if (enemy.attackCooldown > 0) enemy.attackCooldown -= delta;
+
+    let speedMultiplier = 1;
+    // If less than 15 mins left, enemies enrage
+    if (GlobalState.remainingTimeSec < 15 * 60) {
+      speedMultiplier = 1.5;
+      enemy.setTint(0xff0000);
+    } else {
+      enemy.clearTint();
+    }
+
     const dist = Phaser.Math.Distance.Between(
       enemy.x,
       enemy.y,
@@ -1262,8 +1370,9 @@ class GameScene extends Phaser.Scene {
 
     // Chase
     if (dist < 400 && dist > 50) {
-      if (this.player.x < enemy.x) enemy.setVelocityX(-enemy.speed);
-      else enemy.setVelocityX(enemy.speed);
+      if (this.player.x < enemy.x)
+        enemy.setVelocityX(-enemy.speed * speedMultiplier);
+      else enemy.setVelocityX(enemy.speed * speedMultiplier);
     } else {
       enemy.setVelocityX(0);
     }
