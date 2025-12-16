@@ -696,6 +696,7 @@ class MainMenuScene extends Phaser.Scene {
 
     this.menuItems = [
       "Play",
+      "How to Play",
       "Load Game",
       "Subscription",
       "Options",
@@ -797,6 +798,11 @@ class MainMenuScene extends Phaser.Scene {
           });
         }
       }
+    } else if (choice === "How to Play") {
+      if (this.menuMusic) {
+        this.menuMusic.stop();
+      }
+      this.scene.start("HowToPlayScene");
     } else if (choice === "Load Game") {
       if (loadGame()) {
         // Stopping menu music before starting another scene
@@ -819,6 +825,66 @@ class MainMenuScene extends Phaser.Scene {
         "Credits: Saransh Golash (Game Designer) and Phaser (Engine).\nCopyright Demon Reborn: Arishem's Time @2025"
       );
     }
+  }
+}
+
+// How to Play Scene
+class HowToPlayScene extends Phaser.Scene {
+  constructor() {
+    super("HowToPlayScene");
+  }
+
+  create() {
+    this.cameras.main.setBackgroundColor("#150018");
+
+    this.add
+      .text(
+        this.cameras.main.width / 2,
+        this.cameras.main.height / 2 - 250,
+        "How to Play",
+        { fontSize: "40px", fill: "#FFD700" }
+      )
+      .setOrigin(0.5);
+
+    const instructions = [
+      "Use arrow keys to move the character.",
+      "Use spacebar key to hit enemies with magic bullets.",
+      "Use shift key to slow down the time\n(uses mana that recovers over time).\n",
+      "Use R key to rewind the player position by 3 seconds\n(uses 2 minutes of the remaining time).\n",
+      "Use enter key to skip the storylines.",
+      "Use esc key to pause the game.",
+      "In order to complete the game chapter,\nyou have to defeat the boss of that chapter.\n",
+      "Whenever the young mage(player) dies\n10 mins is warped from the remaining time to complete the chapter.\n",
+      "As the remaining time goes closer to 0 a reddish tint\nstarts to appear showcasing urgency and enraging enemies (enemies gets additional buff).\n",
+      "When remaining time is over the game ends,\nyou have to replay the game from the very start.\n",
+    ];
+
+    let yOffset = -180;
+    instructions.forEach((instruction) => {
+      this.add
+        .text(
+          this.cameras.main.width / 2,
+          this.cameras.main.height / 2 + yOffset,
+          "• " + instruction,
+          { fontSize: "14px", fill: "#fff" }
+        )
+        .setOrigin(0.5);
+      yOffset += 40;
+    });
+
+    const backButton = this.add
+      .text(
+        this.cameras.main.width / 2,
+        this.cameras.main.height / 2 + 250,
+        "Back to Main Menu",
+        { fontSize: "20px", fill: "#FFD700" }
+      )
+      .setOrigin(0.5)
+      .setInteractive({ useHandCursor: true });
+
+    backButton.on("pointerdown", () => {
+      this.scene.start("MainMenuScene");
+    });
   }
 }
 
@@ -1553,6 +1619,7 @@ const config = {
     GameScene,
     UIScene,
     PauseScene,
+    HowToPlayScene,
     GameOverScene,
   ],
 };
