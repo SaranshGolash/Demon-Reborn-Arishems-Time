@@ -822,7 +822,7 @@ class MainMenuScene extends Phaser.Scene {
       );
     } else if (choice === "Credits") {
       this.updateMenuVisuals(
-        "Credits: Saransh Golash (Game Designer) and Phaser (Engine).\nCopyright Demon Reborn: Arishem's Time @2025"
+        "Credits: Saransh Golash (Game Designer)\nCopyright Demon Reborn: Arishem's Time @2025"
       );
     }
   }
