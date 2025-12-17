@@ -875,6 +875,7 @@ class HowToPlayScene extends Phaser.Scene {
       "Use spacebar key to hit enemies with magic bullets.",
       "Use shift key to slow down the time\n(uses mana that recovers over time).\n",
       "Use R key to rewind the player position by 3 seconds\n(uses 2 minutes of the remaining time).\n",
+      "Use T key to interact with the timeline to see a past memory or a future possible scenario.\nThere are object blocking the path unless you interact with it, you won't move forward.\n",
       "Use enter key to skip the storylines.",
       "Use esc key to pause the game.",
       "In order to complete the game chapter,\nyou have to defeat the boss of that chapter.\n",
