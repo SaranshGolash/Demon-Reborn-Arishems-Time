@@ -173,6 +173,30 @@ const storylines = {
   ],
 };
 
+// Timeline Memories and Scenarios
+const timelineMemories = {
+  past: [
+    "The memory of your father's smile... before Arishem took him.",
+    "A peaceful village, untouched by darkness. How it used to be.",
+    "Your childhood home, where hope still lived.",
+    "The day you first learned magic, full of wonder and promise.",
+    "Friends laughing together, unaware of the coming storm.",
+    "The last time you saw your father alive, teaching you courage.",
+    "A world where demons and humans lived in harmony.",
+    "The ancient library where you discovered your true power.",
+  ],
+  future: [
+    "Arishem's shadow grows, consuming all light and hope.",
+    "The ruins of what once was... a warning of things to come.",
+    "Darkness spreads, corrupting everything in its path.",
+    "A future where only Arishem's will remains.",
+    "The world burns, and you are the last spark of resistance.",
+    "Time itself fractures under Arishem's dominion.",
+    "A future where your failure means eternal darkness.",
+    "The final battle approaches... will you be ready?",
+  ],
+};
+
 const chapterBosses = {
   1: {
     key: "boss_chap1",
@@ -1144,6 +1168,10 @@ class GameScene extends Phaser.Scene {
     this.rewindKey = this.input.keyboard.addKey(
       Phaser.Input.Keyboard.KeyCodes.R
     );
+    this.timelineKey = this.input.keyboard.addKey(
+      Phaser.Input.Keyboard.KeyCodes.T
+    );
+    this.isFuture = true;
 
     // WASD keys
     this.wasd = {
@@ -1219,6 +1247,30 @@ class GameScene extends Phaser.Scene {
     );
 
     this.scene.launch("UIScene");
+    // Adding past and future platforms
+    this.futurePlatforms = this.physics.add.staticGroup();
+    this.pastPlatforms = this.physics.add.staticGroup();
+
+    this.pastPlatforms
+      .create(1600, 400, "ground")
+      .setDisplaySize(200, 40)
+      .refreshBody();
+
+    this.futurePlatforms
+      .create(1000, 350, "ground")
+      .setDisplaySize(40, 300)
+      .refreshBody();
+
+    this.pastPlatforms.setVisible(false);
+    this.pastPlatforms.setActive(false);
+    this.futurePlatforms.setVisible(true);
+    this.futurePlatforms.setActive(true);
+
+    this.futureCollider = this.physics.add.collider(
+      this.player,
+      this.futurePlatforms
+    );
+    this.pastCollider = null; // will change when interacting with past
   }
 
   spawnEnemiesAndBoss() {
@@ -1312,6 +1364,50 @@ class GameScene extends Phaser.Scene {
     }
   }
 
+  toggleTimeline() {
+    this.isFuture = !this.isFuture;
+
+    if (this.isFuture) {
+      this.pastPlatforms.setVisible(false);
+      this.pastPlatforms.setActive(false);
+      this.futurePlatforms.setVisible(true);
+      this.futurePlatforms.setActive(true);
+
+      if (this.pastCollider) {
+        this.pastCollider.destroy();
+        this.pastCollider = null;
+      }
+      if (!this.futureCollider || !this.futureCollider.active) {
+        this.futureCollider = this.physics.add.collider(
+          this.player,
+          this.futurePlatforms
+        );
+      }
+
+      this.showTimelineMemory(false);
+    } else {
+      this.futurePlatforms.setVisible(false);
+      this.futurePlatforms.setActive(false);
+      this.pastPlatforms.setVisible(true);
+      this.pastPlatforms.setActive(true);
+
+      if (this.futureCollider) {
+        this.futureCollider.destroy();
+        this.futureCollider = null;
+      }
+      if (!this.pastCollider || !this.pastCollider.active) {
+        this.pastCollider = this.physics.add.collider(
+          this.player,
+          this.pastPlatforms
+        );
+      }
+
+      this.showTimelineMemory(true);
+    }
+
+    this.cameras.main.flash(200, 255, 255, 255);
+  }
+
   update(time, delta) {
     // We shift the texture of the TileSprite based on camera scroll
     this.background.tilePositionX = this.cameras.main.scrollX * 0.5;
@@ -1378,6 +1474,9 @@ class GameScene extends Phaser.Scene {
     if (Phaser.Input.Keyboard.JustDown(this.saveKey)) {
       saveGame(this.currentCheckpoint.id);
       this.showFloatingText(this.player.x, this.player.y - 50, "Saved!");
+    }
+    if (Phaser.Input.Keyboard.JustDown(this.timelineKey)) {
+      this.toggleTimeline();
     }
 
     this.recordTimer += delta;
@@ -1561,6 +1660,84 @@ class GameScene extends Phaser.Scene {
       alpha: 0,
       duration: 1000,
       onComplete: () => t.destroy(),
+    });
+  }
+
+  showTimelineMemory(isPast) {
+    // Getting random memory or possible scenario based on timeline
+    const memories = isPast ? timelineMemories.past : timelineMemories.future;
+    const randomMemory = memories[Math.floor(Math.random() * memories.length)];
+
+    const overlay = this.add.rectangle(
+      this.cameras.main.centerX,
+      this.cameras.main.centerY,
+      this.cameras.main.width,
+      this.cameras.main.height,
+      isPast ? 0x88ff88 : 0xff8888,
+      0.7
+    );
+    overlay.setScrollFactor(0);
+    overlay.setDepth(1000);
+
+    const memoryText = this.add
+      .text(
+        this.cameras.main.centerX,
+        this.cameras.main.centerY - 50,
+        randomMemory,
+        {
+          fontSize: "20px",
+          color: "#ffffff",
+          stroke: "#000000",
+          strokeThickness: 3,
+          wordWrap: { width: 800 },
+          align: "center",
+          backgroundColor: "#000000AA",
+          padding: { x: 20, y: 15 },
+        }
+      )
+      .setOrigin(0.5)
+      .setScrollFactor(0)
+      .setDepth(1001);
+
+    const timelineLabel = this.add
+      .text(
+        this.cameras.main.centerX,
+        this.cameras.main.centerY - 150,
+        isPast ? "PAST MEMORY" : "FUTURE VISION",
+        {
+          fontSize: "32px",
+          color: isPast ? "#88ff88" : "#ff8888",
+          stroke: "#000000",
+          strokeThickness: 4,
+          fontStyle: "bold",
+        }
+      )
+      .setOrigin(0.5)
+      .setScrollFactor(0)
+      .setDepth(1001);
+
+    overlay.setAlpha(0);
+    memoryText.setAlpha(0);
+    timelineLabel.setAlpha(0);
+
+    this.tweens.add({
+      targets: [overlay, memoryText, timelineLabel],
+      alpha: 1,
+      duration: 500,
+      ease: "Power2",
+    });
+
+    this.tweens.add({
+      targets: [overlay, memoryText, timelineLabel],
+      alpha: 0,
+      duration: 500,
+      delay: 3000,
+      ease: "Power2",
+      onComplete: () => {
+        overlay.destroy();
+        memoryText.destroy();
+        timelineLabel.destroy();
+      },
     });
   }
 }
