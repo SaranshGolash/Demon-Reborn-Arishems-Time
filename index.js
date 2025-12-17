@@ -626,7 +626,7 @@ class IntroScene extends Phaser.Scene {
     this.cameras.main.setBackgroundColor("#000000");
 
     this.introSound = this.sound.add("intro_horror_sound", {
-      loop: true,
+      loop: false,
     });
     this.introSound.play();
 
@@ -644,7 +644,7 @@ class IntroScene extends Phaser.Scene {
       y: -introDisplay.height - 100, // Scroll up and off-screen
       scale: 0.1, // Fade into distance
       alpha: 0, // Fade out
-      duration: 50000,
+      duration: 35000,
       ease: "Linear",
       onComplete: () => {
         this.introSound.stop();
