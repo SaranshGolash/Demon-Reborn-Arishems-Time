@@ -8,7 +8,7 @@
 }
 
 body {
-  background-color: #0b0f19; /* Deep Norse Night */
+  background-color: #0b0f19;
   background-image: radial-gradient(
       circle at 20% 20%,
       #1c3d52 0%,
@@ -20,11 +20,11 @@ body {
   align-items: center;
   height: 100vh;
   margin: 0;
-  font-family: "Cinzel", serif; /* A more mythic font if available, else serif */
+  font-family: "Cinzel", serif;
   overflow: hidden;
 }
 
-/* --- SWITCH CONTAINER --- */
+/* SWITCH CONTAINER */
 .switch-console {
   display: flex;
   align-items: center;
@@ -32,14 +32,56 @@ body {
   filter: drop-shadow(0 30px 40px rgba(0, 0, 0, 0.8));
   transform: scale(0.95);
 }
+@keyframes snapLeft {
+  0% {
+    transform: translateX(-200px) rotate(-5deg);
+    opacity: 0;
+  }
+  60% {
+    opacity: 1;
+  }
+  80% {
+    transform: translateX(10px);
+  }
+  100% {
+    transform: translateX(0) rotate(0deg);
+    opacity: 1;
+  }
+}
+@keyframes snapRight {
+  0% {
+    transform: translateX(200px) rotate(5deg);
+    opacity: 0;
+  }
+  60% {
+    opacity: 1;
+  }
+  80% {
+    transform: translateX(-10px);
+  }
+  100% {
+    transform: translateX(0) rotate(0deg);
+    opacity: 1;
+  }
+}
 
-/* --- JOY-CONS COMMON --- */
+@keyframes screenFade {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* JOY-CONS COMMON */
 .joy-con {
-  width: 150px;
-  height: 590px;
+  width: 110px;
+  height: 410px;
   position: relative;
   z-index: 1;
-  /* Matte finish with subtle noise/frost texture */
   background-image: linear-gradient(
       135deg,
       rgba(255, 255, 255, 0.1) 0%,
@@ -48,17 +90,18 @@ body {
     url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjZmZmIiBmaWxsLW9wYWNpdHk9IjAuMDUiLz4KPC9zdmc+");
   box-shadow: inset 5px 5px 15px rgba(255, 255, 255, 0.4),
     inset -5px -5px 15px rgba(0, 0, 0, 0.3);
+  opacity: 0;
 }
 
-/* --- LEFT JOY-CON (ICED BLUE) --- */
+/* LEFT JOY-CON (ICED BLUE) */
 .joy-con.left {
   background-color: var(--ice-blue);
   border-top-left-radius: 60px;
   border-bottom-left-radius: 60px;
   border-right: 2px solid rgba(0, 0, 0, 0.1);
+  animation: snapLeft 0.8s cubic-bezier(0.2, 0.8, 0.2, 1.2) 0.5s forwards;
 }
 
-/* Decoration: Wolf/Bear Iconography simplified as a stripe */
 .joy-con.left::before {
   content: "";
   position: absolute;
@@ -71,17 +114,19 @@ body {
   background: transparent;
 }
 
-/* --- RIGHT JOY-CON (FROST WHITE) --- */
+/* RIGHT JOY-CON (FROST WHITE)*/
 .joy-con.right {
   background-color: var(--frost-white);
   border-top-right-radius: 60px;
   border-bottom-right-radius: 60px;
   border-left: 2px solid rgba(0, 0, 0, 0.1);
+
+  /* Apply Animation */
+  animation: snapRight 0.8s cubic-bezier(0.2, 0.8, 0.2, 1.2) 0.5s forwards;
 }
 
-/* Decoration: Runic Pattern */
 .joy-con.right::before {
-  content: "ᚱagnarök"; /* Faux Runic Text */
+  content: "ᚱagnarök";
   position: absolute;
   bottom: 100px;
   right: 15px;
@@ -92,7 +137,7 @@ body {
   font-weight: bold;
 }
 
-/* --- CENTER SCREEN BEZEL --- */
+/* CENTER SCREEN BEZEL */
 .console-center {
   background: #1a1a1a;
   padding: 20px 30px;
@@ -102,9 +147,11 @@ body {
   position: relative;
   border-top: 4px solid #333;
   border-bottom: 4px solid #333;
+
+  /* Screen Intro Animation */
+  animation: screenFade 1s ease-out forwards;
 }
 
-/* Subtle Omega Symbol on the back (implied by top bezel logo) */
 .console-center::before {
   content: "SONY";
   position: absolute;
@@ -131,7 +178,7 @@ body {
   height: 100%;
 }
 
-/* --- ANALOG STICKS (Custom Texture) --- */
+/* ANALOG STICKS */
 .analog-stick {
   width: 44px;
   height: 44px;
@@ -144,7 +191,6 @@ body {
   border: 1px solid #000;
 }
 
-/* Stick Ring Accent (Blue on Left, Red on Right) */
 .left .analog-stick {
   top: 70px;
   border: 2px solid var(--deep-blue);
@@ -154,7 +200,7 @@ body {
   border: 2px solid var(--kratos-red);
 }
 
-/* --- BUTTONS (Runes) --- */
+/* BUTTONS */
 .buttons-circle {
   position: absolute;
   left: 50%;
@@ -178,14 +224,12 @@ body {
   font-family: monospace;
 }
 
-/* Highlight specific buttons with God of War Red */
 .right .btn {
-  color: var(--kratos-red); /* Red Symbols */
+  color: var(--kratos-red);
   background: #222;
   border: 1px solid #000;
 }
 
-/* Positioning */
 .left .buttons-circle {
   top: 150px;
 }
@@ -206,12 +250,11 @@ body {
   right: 0;
 }
 
-/* D-Pad Decal */
 .left .btn::after {
   content: "▲";
   font-size: 8px;
   opacity: 0.5;
-} /* Generic directionals */
+}
 
 .right .buttons-circle {
   top: 70px;
@@ -219,23 +262,20 @@ body {
 .right .btn.x {
   top: 0;
   left: 24px;
-} /* North */
+}
 .right .btn.b {
   bottom: 0;
   left: 24px;
-} /* South */
+}
 .right .btn.y {
   top: 24px;
   left: 0;
-} /* West */
+}
 .right .btn.a {
   top: 24px;
   right: 0;
-} /* East */
+}
 
-/* --- DECORATIVE DETAILS --- */
-
-/* The "Minus" button as a Rune */
 .left .minus {
   width: 18px;
   height: 6px;
@@ -246,7 +286,6 @@ body {
   border-radius: 2px;
 }
 
-/* The "Plus" button as a Rune */
 .right .plus {
   position: absolute;
   top: 35px;
@@ -264,7 +303,6 @@ body {
   content: "+";
 }
 
-/* Home Button with Glow */
 .right .home {
   width: 20px;
   height: 20px;
@@ -274,7 +312,7 @@ body {
   bottom: 40px;
   left: 25px;
   border: 2px solid #444;
-  box-shadow: 0 0 5px var(--ice-blue); /* Magical glow */
+  box-shadow: 0 0 5px var(--ice-blue);
 }
 
 .left .capture {
@@ -288,13 +326,12 @@ body {
   border: 1px solid #000;
 }
 
-/* --- OMEGA SYMBOL OVERLAY (Optional decorative element) --- */
 .switch-console::after {
   content: "Ω";
   position: absolute;
   font-size: 600px;
   font-family: serif;
-  color: rgba(143, 30, 30, 0.03); /* Extremely faint red background symbol */
+  color: rgba(143, 30, 30, 0.03);
   z-index: -1;
   pointer-events: none;
 }
