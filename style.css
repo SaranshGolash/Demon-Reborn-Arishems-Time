@@ -1,11 +1,300 @@
-body {
-  margin: 0;
-  background: #000;
-  color: #fff;
-  font-family: sans-serif;
-  overflow: hidden; /* Prevents scrollbars */
+:root {
+  --kratos-red: #8f1e1e;
+  --ice-blue: #c2dbe6;
+  --deep-blue: #1c3d52;
+  --runic-gold: #c5a059;
+  --stone-grey: #2a2a2a;
+  --frost-white: #f0f8ff;
 }
-canvas {
-  display: block;
-  margin: 0 auto;
+
+body {
+  background-color: #0b0f19; /* Deep Norse Night */
+  background-image: radial-gradient(
+      circle at 20% 20%,
+      #1c3d52 0%,
+      transparent 40%
+    ),
+    radial-gradient(circle at 80% 80%, #0d121c 0%, transparent 40%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+  font-family: "Cinzel", serif; /* A more mythic font if available, else serif */
+  overflow: hidden;
+}
+
+/* --- SWITCH CONTAINER --- */
+.switch-console {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 30px 40px rgba(0, 0, 0, 0.8));
+  transform: scale(0.95);
+}
+
+/* --- JOY-CONS COMMON --- */
+.joy-con {
+  width: 110px;
+  height: 410px;
+  position: relative;
+  z-index: 1;
+  /* Matte finish with subtle noise/frost texture */
+  background-image: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.1) 0%,
+      rgba(0, 0, 0, 0.05) 100%
+    ),
+    url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjZmZmIiBmaWxsLW9wYWNpdHk9IjAuMDUiLz4KPC9zdmc+");
+  box-shadow: inset 5px 5px 15px rgba(255, 255, 255, 0.4),
+    inset -5px -5px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* --- LEFT JOY-CON (ICED BLUE) --- */
+.joy-con.left {
+  background-color: var(--ice-blue);
+  border-top-left-radius: 60px;
+  border-bottom-left-radius: 60px;
+  border-right: 2px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Decoration: Wolf/Bear Iconography simplified as a stripe */
+.joy-con.left::before {
+  content: "";
+  position: absolute;
+  bottom: 80px;
+  left: 20px;
+  width: 60px;
+  height: 60px;
+  border: 2px solid rgba(28, 61, 82, 0.3);
+  border-radius: 50%;
+  background: transparent;
+}
+
+/* --- RIGHT JOY-CON (FROST WHITE) --- */
+.joy-con.right {
+  background-color: var(--frost-white);
+  border-top-right-radius: 60px;
+  border-bottom-right-radius: 60px;
+  border-left: 2px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Decoration: Runic Pattern */
+.joy-con.right::before {
+  content: "ᚱagnarök"; /* Faux Runic Text */
+  position: absolute;
+  bottom: 100px;
+  right: 15px;
+  font-size: 14px;
+  color: rgba(28, 61, 82, 0.5);
+  transform: rotate(-90deg);
+  letter-spacing: 5px;
+  font-weight: bold;
+}
+
+/* --- CENTER SCREEN BEZEL --- */
+.console-center {
+  background: #1a1a1a;
+  padding: 20px 30px;
+  border-radius: 4px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 1);
+  z-index: 2;
+  position: relative;
+  border-top: 4px solid #333;
+  border-bottom: 4px solid #333;
+}
+
+/* Subtle Omega Symbol on the back (implied by top bezel logo) */
+.console-center::before {
+  content: "SONY";
+  position: absolute;
+  top: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #444;
+  font-size: 10px;
+  letter-spacing: 2px;
+  font-family: sans-serif;
+}
+
+.screen-bezel {
+  width: 960px;
+  height: 540px;
+  background: #000;
+  position: relative;
+  border: 2px solid #000;
+  box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.1);
+}
+
+#game-container {
+  width: 100%;
+  height: 100%;
+}
+
+/* --- ANALOG STICKS (Custom Texture) --- */
+.analog-stick {
+  width: 44px;
+  height: 44px;
+  background: radial-gradient(circle at 30% 30%, #444, #111);
+  border-radius: 50%;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.6);
+  border: 1px solid #000;
+}
+
+/* Stick Ring Accent (Blue on Left, Red on Right) */
+.left .analog-stick {
+  top: 70px;
+  border: 2px solid var(--deep-blue);
+}
+.right .analog-stick {
+  bottom: 150px;
+  border: 2px solid var(--kratos-red);
+}
+
+/* --- BUTTONS (Runes) --- */
+.buttons-circle {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 70px;
+  height: 70px;
+}
+
+.btn {
+  width: 22px;
+  height: 22px;
+  background: #111;
+  border-radius: 50%;
+  position: absolute;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: #666;
+  font-family: monospace;
+}
+
+/* Highlight specific buttons with God of War Red */
+.right .btn {
+  color: var(--kratos-red); /* Red Symbols */
+  background: #222;
+  border: 1px solid #000;
+}
+
+/* Positioning */
+.left .buttons-circle {
+  top: 150px;
+}
+.left .btn.up {
+  top: 0;
+  left: 24px;
+}
+.left .btn.down {
+  bottom: 0;
+  left: 24px;
+}
+.left .btn.left {
+  top: 24px;
+  left: 0;
+}
+.left .btn.right {
+  top: 24px;
+  right: 0;
+}
+
+/* D-Pad Decal */
+.left .btn::after {
+  content: "▲";
+  font-size: 8px;
+  opacity: 0.5;
+} /* Generic directionals */
+
+.right .buttons-circle {
+  top: 70px;
+}
+.right .btn.x {
+  top: 0;
+  left: 24px;
+} /* North */
+.right .btn.b {
+  bottom: 0;
+  left: 24px;
+} /* South */
+.right .btn.y {
+  top: 24px;
+  left: 0;
+} /* West */
+.right .btn.a {
+  top: 24px;
+  right: 0;
+} /* East */
+
+/* --- DECORATIVE DETAILS --- */
+
+/* The "Minus" button as a Rune */
+.left .minus {
+  width: 18px;
+  height: 6px;
+  background: #333;
+  position: absolute;
+  top: 35px;
+  right: 25px;
+  border-radius: 2px;
+}
+
+/* The "Plus" button as a Rune */
+.right .plus {
+  position: absolute;
+  top: 35px;
+  left: 25px;
+  width: 18px;
+  height: 18px;
+  font-size: 20px;
+  font-weight: bold;
+  color: #333;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.right .plus::before {
+  content: "+";
+}
+
+/* Home Button with Glow */
+.right .home {
+  width: 20px;
+  height: 20px;
+  background: radial-gradient(circle, transparent 40%, #111 100%);
+  border-radius: 50%;
+  position: absolute;
+  bottom: 40px;
+  left: 25px;
+  border: 2px solid #444;
+  box-shadow: 0 0 5px var(--ice-blue); /* Magical glow */
+}
+
+.left .capture {
+  width: 18px;
+  height: 18px;
+  background: #222;
+  border-radius: 4px;
+  position: absolute;
+  bottom: 40px;
+  right: 25px;
+  border: 1px solid #000;
+}
+
+/* --- OMEGA SYMBOL OVERLAY (Optional decorative element) --- */
+.switch-console::after {
+  content: "Ω";
+  position: absolute;
+  font-size: 600px;
+  font-family: serif;
+  color: rgba(143, 30, 30, 0.03); /* Extremely faint red background symbol */
+  z-index: -1;
+  pointer-events: none;
 }

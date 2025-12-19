@@ -1,12 +1,12 @@
-const SAVE_KEY = "demon_reborn_save_v2"; // Using this key the game saves
+const SAVE_KEY = "demon_reborn_save_v2";
 
 const GlobalState = {
-  chapterTimeLimit: 60 * 60, // Chapter time limit is set to 1hr(60mins)
-  deathPenaltySec: 10 * 60, // Whenever the young mage dies 10 mins will be deducted from the chapter time limit
-  remainingTimeSec: 60 * 60, // remaining time left will be updated later during the game
-  chapter: 1, // Initial chapter
+  chapterTimeLimit: 60 * 60,
+  deathPenaltySec: 10 * 60,
+  remainingTimeSec: 60 * 60,
+  chapter: 1,
   totalChapters: 10,
-  isSubscribed: false, // handles subscription check
+  isSubscribed: false,
   playerStats: {
     maxHp: 100,
     hp: 100,
@@ -14,9 +14,9 @@ const GlobalState = {
     speed: 220,
     skillPoints: 0,
     skills: { hpUp: 0, attackUp: 0, speedUp: 0 },
-    mana: 100, // mana for time abilities
+    mana: 100,
   },
-  storylineChapterIndex: 0, // For tracking which part of the storyline gets played depending on the current chapter
+  storylineChapterIndex: 0,
 };
 
 const introText = {
@@ -173,7 +173,6 @@ const storylines = {
   ],
 };
 
-// Timeline Memories and Scenarios
 const timelineMemories = {
   past: [
     "The memory of your father's smile... before Arishem took him.",
@@ -301,7 +300,6 @@ const chapterBosses = {
 };
 
 function resetNewGame() {
-  // reset game
   GlobalState.remainingTimeSec = GlobalState.chapterTimeLimit;
   GlobalState.chapter = 1;
   GlobalState.playerStats.maxHp = 100;
@@ -313,7 +311,6 @@ function resetNewGame() {
 }
 
 function saveGame(checkpointId = "manual") {
-  // saves game
   const data = {
     version: 1,
     remainingTimeSec: GlobalState.remainingTimeSec,
@@ -326,7 +323,6 @@ function saveGame(checkpointId = "manual") {
 }
 
 function loadGame() {
-  // loads the saved game
   const raw = localStorage.getItem(SAVE_KEY);
   if (!raw) return null;
   try {
@@ -343,15 +339,11 @@ function loadGame() {
   }
 }
 
-// Boot Scene to load assets
-
 class BootScene extends Phaser.Scene {
   constructor() {
     super("BootScene");
   }
-
   preload() {
-    // Loads spritesheets
     this.load.spritesheet("player", "assets/necromancer.png", {
       frameWidth: 128,
       frameHeight: 128,
@@ -369,9 +361,8 @@ class BootScene extends Phaser.Scene {
       this.load.spritesheet(bossConfig.key, bossConfig.filename, {
         frameWidth: bossConfig.frameWidth,
         frameHeight: bossConfig.frameHeight,
-        transparent: 0xaa44ff, // to fix an internal bug with the background of the boss during attacking phase
+        transparent: 0xaa44ff,
       });
-      // Loads boss attack spritesheet if different from idle, or if no dedicated attackKey is set in chapterBosses
       if (bossConfig.attackKey) {
         this.load.spritesheet(bossConfig.attackKey, bossConfig.attackFilename, {
           frameWidth: bossConfig.attackFrameWidth,
@@ -385,7 +376,6 @@ class BootScene extends Phaser.Scene {
       frameHeight: 64,
     });
 
-    // Loading game backgrounds depending on the chapter number currently being played
     for (let i = 1; i <= 10; i++) {
       let filename;
       if (i === 1) {
@@ -406,28 +396,22 @@ class BootScene extends Phaser.Scene {
       this.load.image(`bg_${i}`, filename);
     }
 
-    // Loading static items
     this.load.image("ground", "assets/ground.png");
     this.load.image("bullet", "assets/bullet.png");
     this.load.image("enemy_bullet", "assets/purple_ball.png");
     this.load.image("portal", "assets/portal.png");
     this.load.image("checkpoint", "assets/flag.png");
-    this.load.audio("intro_horror_sound", "sounds/horror-transition.mp3"); // Loading for Intro Scene
-    this.load.audio("evil_cue_sound", "sounds/evil-cue.mp3"); // Loading for Chapter 1
-    this.load.audio("evil_drone_sound", "sounds/evil-drone.mp3"); // Loading for MainMenuScene
-    this.load.audio("chapter2_bg_music", "sounds/old-evil-ghosts.mp3"); // Loading for Chapter 2
+    this.load.audio("intro_horror_sound", "sounds/horror-transition.mp3");
+    this.load.audio("evil_cue_sound", "sounds/evil-cue.mp3");
+    this.load.audio("evil_drone_sound", "sounds/evil-drone.mp3");
+    this.load.audio("chapter2_bg_music", "sounds/old-evil-ghosts.mp3");
     this.load.spritesheet(
       "NightNorne_attack_png",
       "assets/NightBorne_attack.png",
-      {
-        frameWidth: 80,
-        frameHeight: 80,
-      }
+      { frameWidth: 80, frameHeight: 80 }
     );
   }
-
   create() {
-    // Player Animations
     this.anims.create({
       key: "player_idle",
       frames: this.anims.generateFrameNumbers("player", {
@@ -437,7 +421,6 @@ class BootScene extends Phaser.Scene {
       frameRate: 1,
       repeat: -1,
     });
-
     this.anims.create({
       key: "player_run",
       frames: this.anims.generateFrameNumbers("player", {
@@ -447,8 +430,6 @@ class BootScene extends Phaser.Scene {
       frameRate: 10,
       repeat: -1,
     });
-
-    // Enemy Animations
     this.anims.create({
       key: "enemy_walk",
       frames: this.anims.generateFrameNumbers("enemy", {
@@ -458,8 +439,6 @@ class BootScene extends Phaser.Scene {
       frameRate: 4,
       repeat: -1,
     });
-
-    // Boss Animations
     this.anims.create({
       key: "boss_idle",
       frames: this.anims.generateFrameNumbers("boss", {
@@ -470,7 +449,6 @@ class BootScene extends Phaser.Scene {
       repeat: -1,
     });
 
-    // Boss animations for each chapter
     for (const chapterNum in chapterBosses) {
       const bossConfig = chapterBosses[chapterNum];
       this.anims.create({
@@ -482,8 +460,6 @@ class BootScene extends Phaser.Scene {
         frameRate: 4,
         repeat: -1,
       });
-
-      // Boss attack animation for each chapter
       if (bossConfig.attackKey) {
         let endFrame = 2;
         if (bossConfig.attackFilename === "assets/boss.png") {
@@ -500,7 +476,6 @@ class BootScene extends Phaser.Scene {
         });
       }
     }
-
     this.anims.create({
       key: "boss_attack_anim",
       frames: this.anims.generateFrameNames("boss_attack_anim_png"),
@@ -508,27 +483,22 @@ class BootScene extends Phaser.Scene {
       repeat: 0,
     });
     this.anims.create({
-      key: "enemy_attack_gif_anim", // animation key
+      key: "enemy_attack_gif_anim",
       frames: this.anims.generateFrameNames("NightNorne_attack_png"),
       frameRate: 15,
       repeat: 0,
     });
-
     this.scene.start("MainMenuScene");
   }
 }
-
-// Storyline Scene
 
 class StorylineScene extends Phaser.Scene {
   constructor() {
     super("StorylineScene");
   }
-
   init(data) {
     this.chapter = data.chapter;
   }
-
   create() {
     this.cameras.main.setBackgroundColor("#000000");
     this.dialogueIndex = 0;
@@ -556,47 +526,38 @@ class StorylineScene extends Phaser.Scene {
 
     this.input.keyboard.on("keydown-ENTER", this.advanceDialogue, this);
     this.input.on("pointerdown", this.advanceDialogue, this);
-
-    this.isAnimatingText = false; // Flag to check if text is currently animating
-    this.typewriterTimer = null; // To hold the timed event for animation
-
+    this.isAnimatingText = false;
+    this.typewriterTimer = null;
     this.showDialogue();
   }
-
   showDialogue() {
     if (this.dialogueIndex < this.currentStoryline.length) {
       const line = this.currentStoryline[this.dialogueIndex];
       this.speakerText.setText(line.speaker);
-      this.typewriteText(line.text); // Animate text
+      this.typewriteText(line.text);
     } else {
-      // Storyline finished, start the game
       this.scene.start("GameScene");
     }
   }
-
   advanceDialogue() {
     if (this.isAnimatingText) {
-      // If text is animating, skip to end of current line
       if (this.typewriterTimer) {
         this.typewriterTimer.remove();
       }
-      // Ensure dialogueIndex is valid before accessing currentStoryline
       if (this.dialogueIndex < this.currentStoryline.length) {
         this.dialogueText.setText(
           this.currentStoryline[this.dialogueIndex].text
-        ); // Show full text of current line
+        );
       }
       this.isAnimatingText = false;
     } else {
-      // If not animating, advance to next dialogue line or end storyline
       this.dialogueIndex++;
       this.showDialogue();
     }
   }
-
   typewriteText(text) {
     this.isAnimatingText = true;
-    this.dialogueText.setText(""); // Clear current text
+    this.dialogueText.setText("");
     const length = text.length;
     let i = 0;
     this.typewriterTimer = this.time.addEvent({
@@ -609,27 +570,22 @@ class StorylineScene extends Phaser.Scene {
         }
       },
       callbackScope: this,
-      delay: 50, // Adjust this value for typing speed
+      delay: 50,
       loop: true,
     });
   }
 }
 
-// Intro Scene
-
 class IntroScene extends Phaser.Scene {
   constructor() {
     super("IntroScene");
   }
-
   create() {
     this.cameras.main.setBackgroundColor("#000000");
-
     this.introSound = this.sound.add("intro_horror_sound", {
       loop: false,
     });
     this.introSound.play();
-
     const introDisplay = this.add
       .text(480, 540, introText.text, {
         fontSize: "24px",
@@ -641,9 +597,9 @@ class IntroScene extends Phaser.Scene {
 
     this.tweens.add({
       targets: introDisplay,
-      y: -introDisplay.height - 100, // Scroll up and off-screen
-      scale: 0.1, // Fade into distance
-      alpha: 0, // Fade out
+      y: -introDisplay.height - 100,
+      scale: 0.1,
+      alpha: 0,
       duration: 35000,
       ease: "Linear",
       onComplete: () => {
@@ -654,7 +610,6 @@ class IntroScene extends Phaser.Scene {
       },
     });
 
-    // Allowing skipping the intro scene
     this.input.keyboard.on("keydown-ENTER", () => {
       this.introSound.stop();
       this.scene.stop();
@@ -672,28 +627,20 @@ class IntroScene extends Phaser.Scene {
   }
 }
 
-// Main Menu Scene
-
 class MainMenuScene extends Phaser.Scene {
   constructor() {
     super("MainMenuScene");
   }
-
   create() {
     this.cameras.main.setBackgroundColor("#150018");
-
-    // Resuming audio on user interaction
     if (
       this.sys.game.device.input.touch &&
       this.sys.game.device.input.touch.is_touched
     ) {
-      // For mobile phones
       if (this.sys.game.audio.context.state === "suspended") {
         this.sys.game.audio.context.resume();
       }
     }
-
-    // Adding an input listener to resume audio context on any user interaction
     this.input.once("pointerdown", () => {
       if (this.sys.game.audio.context.state === "suspended") {
         this.sys.game.audio.context.resume();
@@ -736,18 +683,17 @@ class MainMenuScene extends Phaser.Scene {
           color: "#dddddd",
         })
         .setOrigin(0.5)
-        .setInteractive({ useHandCursor: true }); // Enabling interactivity
+        .setInteractive({ useHandCursor: true });
       t.on("pointerdown", () => {
-        this.selectedIndex = i; // Setting selected index to the clicked item
-        this.updateMenuVisuals(); // Updating visuals to highlight clicked item
-        this.handleSelect(); // Handles the selection
+        this.selectedIndex = i;
+        this.updateMenuVisuals();
+        this.handleSelect();
       });
       t.on("pointerover", () => {
         this.selectedIndex = i;
         this.updateMenuVisuals();
-      }); // Updates visuals on hover
+      });
       t.on("pointerout", () => {
-        // Resets visual if not selected
         if (this.selectedIndex === i) {
           this.updateMenuVisuals();
         }
@@ -787,11 +733,11 @@ class MainMenuScene extends Phaser.Scene {
   updateMenuVisuals(extraInfo) {
     for (let i = 0; i < this.menuItems.length; i++) {
       const prefix = i === this.selectedIndex ? "> " : "  ";
-      this.menuTexts[i]
-        .setText(prefix + this.menuItems[i])
-        .setStyle({ color: i === this.selectedIndex ? "#ffffff" : "#dddddd" });
+      this.menuTexts[i].setText(prefix + this.menuItems[i]).setStyle({
+        color: i === this.selectedIndex ? "#ffffff" : "#dddddd",
+      });
     }
-    const subStatus = GlobalState.isSubscribed ? "ACTIVE" : "LOCKED"; // Handling subscription
+    const subStatus = GlobalState.isSubscribed ? "ACTIVE" : "LOCKED";
     this.infoText.setText(
       (extraInfo || "") +
         `\nSubscription: ${subStatus}\nChapters 4-10 require subscription.`
@@ -802,18 +748,13 @@ class MainMenuScene extends Phaser.Scene {
     const choice = this.menuItems[this.selectedIndex];
     if (choice === "Play") {
       resetNewGame();
-
-      // Explicitly resetting currentCheckpoint when starting a new game
       this.scene.get("GameScene").currentCheckpoint = null;
-
       if (GlobalState.chapter > 3 && !GlobalState.isSubscribed) {
         this.updateMenuVisuals("Subscription required!");
       } else {
-        // Stopping menu music before starting another scene
         if (this.menuMusic) {
           this.menuMusic.stop();
         }
-        // Starting Intro Scene only for Chapter 1, otherwise go to StorylineScene
         if (GlobalState.chapter === 1) {
           this.scene.start("IntroScene");
         } else {
@@ -829,7 +770,6 @@ class MainMenuScene extends Phaser.Scene {
       this.scene.start("HowToPlayScene");
     } else if (choice === "Load Game") {
       if (loadGame()) {
-        // Stopping menu music before starting another scene
         if (this.menuMusic) {
           this.menuMusic.stop();
         }
@@ -852,15 +792,12 @@ class MainMenuScene extends Phaser.Scene {
   }
 }
 
-// How to Play Scene
 class HowToPlayScene extends Phaser.Scene {
   constructor() {
     super("HowToPlayScene");
   }
-
   create() {
     this.cameras.main.setBackgroundColor("#150018");
-
     this.add
       .text(
         this.cameras.main.width / 2,
@@ -906,20 +843,16 @@ class HowToPlayScene extends Phaser.Scene {
       )
       .setOrigin(0.5)
       .setInteractive({ useHandCursor: true });
-
     backButton.on("pointerdown", () => {
       this.scene.start("MainMenuScene");
     });
   }
 }
 
-// UI Scene
-
 class UIScene extends Phaser.Scene {
   constructor() {
     super("UIScene");
   }
-
   create() {
     this.timerText = this.add.text(10, 10, "", {
       fontSize: "18px",
@@ -939,29 +872,23 @@ class UIScene extends Phaser.Scene {
     });
     this.gameScene = this.scene.get("GameScene");
   }
-
   formatTime(sec) {
     sec = Math.max(0, Math.floor(sec));
     const m = Math.floor(sec / 60);
     const s = sec % 60;
     return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
   }
-
   update(time, delta) {
     if (!this.gameScene) return;
-
-    // Global time countdown
     if (GlobalState.remainingTimeSec > 0) {
       GlobalState.remainingTimeSec -= delta / 1000;
     }
-
     if (GlobalState.remainingTimeSec <= 0) {
       GlobalState.remainingTimeSec = 0;
       this.scene.stop("GameScene");
       this.scene.start("GameOverScene", { reason: "time" });
       return;
     }
-
     this.timerText.setText(
       "Time Left: " + this.formatTime(GlobalState.remainingTimeSec)
     );
@@ -975,16 +902,12 @@ class UIScene extends Phaser.Scene {
   }
 }
 
-// Pause Scene
-
 class PauseScene extends Phaser.Scene {
   constructor() {
     super("PauseScene");
   }
-
   create() {
     this.add.rectangle(480, 270, 960, 540, 0x000000, 0.85);
-
     this.add
       .text(480, 100, "GAME PAUSED", {
         fontSize: "40px",
@@ -1003,7 +926,6 @@ class PauseScene extends Phaser.Scene {
         })
         .setOrigin(0.5)
         .setInteractive({ useHandCursor: true });
-
       t.on("pointerover", () => t.setStyle({ color: "#0f0" }));
       t.on("pointerout", () => t.setStyle({ color: "#fff" }));
       t.on("pointerdown", callback);
@@ -1022,7 +944,6 @@ class PauseScene extends Phaser.Scene {
         ? gameScene.currentCheckpoint.id
         : "manual_pause";
       saveGame(cpId);
-
       const txt = this.add
         .text(480, 290, "Game Saved!", { color: "#0f0" })
         .setOrigin(0.5);
@@ -1066,7 +987,6 @@ class PauseScene extends Phaser.Scene {
       ) {
         gameScene.chapterMusic.stop();
       }
-      // If there's a bossIntroSound, stop it as well if it's playing
       if (
         gameScene &&
         gameScene.bossIntroSound &&
@@ -1087,19 +1007,15 @@ class PauseScene extends Phaser.Scene {
   }
 }
 
-// Game Scene
-
 class GameScene extends Phaser.Scene {
   constructor() {
     super("GameScene");
   }
-
   create() {
     this.levelWidth = 2400;
     this.physics.world.setBounds(0, 0, this.levelWidth, 540);
     this.cameras.main.setBounds(0, 0, this.levelWidth, 540);
 
-    // Stopping intro music if it's still playing
     const introScene = this.scene.get("IntroScene");
     if (
       introScene &&
@@ -1109,11 +1025,9 @@ class GameScene extends Phaser.Scene {
       introScene.introSound.stop();
     }
 
-    // Playing chapter music
     if (this.chapterMusic) {
       this.chapterMusic.stop();
     }
-
     if (GlobalState.chapter === 1) {
       this.chapterMusic = this.sound.add("evil_cue_sound", {
         loop: true,
@@ -1128,9 +1042,7 @@ class GameScene extends Phaser.Scene {
       this.chapterMusic = null;
     }
 
-    // Adding chapter backgrounds
     const bgKey = `bg_${Math.min(GlobalState.chapter, 10)}`;
-    // Locking camera
     this.background = this.add
       .tileSprite(0, 0, 960, 540, bgKey)
       .setOrigin(0, 0)
@@ -1150,7 +1062,6 @@ class GameScene extends Phaser.Scene {
     this.player = this.physics.add.sprite(startX, 400, "player");
     this.player.setCollideWorldBounds(true);
     this.playerHp = GlobalState.playerStats.hp;
-
     this.physics.add.collider(this.player, this.platforms);
     this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
 
@@ -1164,7 +1075,7 @@ class GameScene extends Phaser.Scene {
     );
     this.isTimeSlowed = false;
 
-    this.positionHistory = []; // Array storing {x, y, hp, time}
+    this.positionHistory = [];
     this.recordTimer = 0;
     this.rewindKey = this.input.keyboard.addKey(
       Phaser.Input.Keyboard.KeyCodes.R
@@ -1174,7 +1085,6 @@ class GameScene extends Phaser.Scene {
     );
     this.isFuture = true;
 
-    // WASD keys
     this.wasd = {
       up: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W),
       left: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A),
@@ -1190,12 +1100,10 @@ class GameScene extends Phaser.Scene {
 
     this.bullets = this.physics.add.group({ allowGravity: false });
     this.enemyBullets = this.physics.add.group({ allowGravity: false });
-
     this.enemies = this.physics.add.group();
     this.boss = null;
     this.spawnEnemiesAndBoss();
 
-    // Collisions
     this.physics.add.collider(this.enemies, this.platforms);
     this.physics.add.overlap(
       this.player,
@@ -1248,7 +1156,6 @@ class GameScene extends Phaser.Scene {
     );
 
     this.scene.launch("UIScene");
-    // Adding past and future platforms
     this.futurePlatforms = this.physics.add.staticGroup();
     this.pastPlatforms = this.physics.add.staticGroup();
 
@@ -1256,7 +1163,6 @@ class GameScene extends Phaser.Scene {
       .create(1600, 400, "ground")
       .setDisplaySize(200, 40)
       .refreshBody();
-
     this.futurePlatforms
       .create(1000, 350, "ground")
       .setDisplaySize(40, 300)
@@ -1271,7 +1177,7 @@ class GameScene extends Phaser.Scene {
       this.player,
       this.futurePlatforms
     );
-    this.pastCollider = null; // will change when interacting with past
+    this.pastCollider = null;
   }
 
   spawnEnemiesAndBoss() {
@@ -1285,15 +1191,12 @@ class GameScene extends Phaser.Scene {
       enemy.isBoss = false;
       enemy.attackCooldown = 0;
       enemy.speed = 60;
-
-      // Start Animation
       enemy.play("enemy_walk");
-      enemy.body.id = `enemy_${i}_chap${GlobalState.chapter}`; // Assigning unique ID
+      enemy.body.id = `enemy_${i}_chap${GlobalState.chapter}`;
     }
 
     const currentBossConfig =
-      chapterBosses[GlobalState.chapter] || chapterBosses[1]; // Default to chapter 1 boss if not found
-
+      chapterBosses[GlobalState.chapter] || chapterBosses[1];
     this.boss = this.enemies.create(
       this.levelWidth - 200,
       440,
@@ -1304,10 +1207,8 @@ class GameScene extends Phaser.Scene {
     this.boss.isBoss = true;
     this.boss.attackCooldown = 0;
     this.boss.speed = 90;
-
-    // Start Animation
     this.boss.play(`${currentBossConfig.key}_idle`);
-    this.boss.body.id = `boss_chap${GlobalState.chapter}`; // Assigning unique ID
+    this.boss.body.id = `boss_chap${GlobalState.chapter}`;
   }
 
   createCheckpoint(x, y, id) {
@@ -1330,7 +1231,6 @@ class GameScene extends Phaser.Scene {
       this.showFloatingText(portal.x, portal.y - 80, "Defeat Boss First!");
       return;
     }
-
     if (GlobalState.chapter >= GlobalState.totalChapters) {
       this.scene.start("GameOverScene", { reason: "victory" });
     } else {
@@ -1343,18 +1243,16 @@ class GameScene extends Phaser.Scene {
       this.currentCheckpoint = { x: 100, y: 400, id: "start" };
 
       if (this.chapterMusic && this.chapterMusic.isPlaying) {
-        this.chapterMusic.stop(); // Stopping current chapter music
+        this.chapterMusic.stop();
       }
-      // If there's a bossIntroSound, stopping it as well if it was playing
       if (
         GlobalState.chapter === 1 &&
         this.bossIntroSound &&
         this.bossIntroSound.isPlaying
       ) {
-        this.bossIntroSound.stop(); // safety check
+        this.bossIntroSound.stop();
       }
 
-      // Checks if there's a storyline for the next chapter
       if (storylines[GlobalState.chapter]) {
         this.scene.start("StorylineScene", {
           chapter: GlobalState.chapter,
@@ -1367,13 +1265,11 @@ class GameScene extends Phaser.Scene {
 
   toggleTimeline() {
     this.isFuture = !this.isFuture;
-
     if (this.isFuture) {
       this.pastPlatforms.setVisible(false);
       this.pastPlatforms.setActive(false);
       this.futurePlatforms.setVisible(true);
       this.futurePlatforms.setActive(true);
-
       if (this.pastCollider) {
         this.pastCollider.destroy();
         this.pastCollider = null;
@@ -1384,14 +1280,12 @@ class GameScene extends Phaser.Scene {
           this.futurePlatforms
         );
       }
-
       this.showTimelineMemory(false);
     } else {
       this.futurePlatforms.setVisible(false);
       this.futurePlatforms.setActive(false);
       this.pastPlatforms.setVisible(true);
       this.pastPlatforms.setActive(true);
-
       if (this.futureCollider) {
         this.futureCollider.destroy();
         this.futureCollider = null;
@@ -1402,33 +1296,24 @@ class GameScene extends Phaser.Scene {
           this.pastPlatforms
         );
       }
-
       this.showTimelineMemory(true);
     }
-
     this.cameras.main.flash(200, 255, 255, 255);
   }
 
   update(time, delta) {
-    // We shift the texture of the TileSprite based on camera scroll
     this.background.tilePositionX = this.cameras.main.scrollX * 0.5;
-
     const totalTime = GlobalState.chapterTimeLimit;
     const remaining = GlobalState.remainingTimeSec;
     const percentLeft = remaining / totalTime;
 
-    // Changing the color shades from Normal (White) to "End of Times" (Red/Dark) to show urgency
     if (this.background) {
-      // 0xFFFFFF 0xFF5555
-      const r = Math.floor(255 * percentLeft + 255 * (1 - percentLeft)); // simple fade logic example
-      const gb = Math.floor(255 * percentLeft); // Green and Blue fade out
-
-      // Apply tint to background
+      const r = Math.floor(255 * percentLeft + 255 * (1 - percentLeft));
+      const gb = Math.floor(255 * percentLeft);
       const color = Phaser.Display.Color.GetColor(255, gb, gb);
       this.background.setTint(color);
     }
 
-    // Player Movement & Animation
     if (this.shiftKey.isDown && GlobalState.playerStats.mana > 0) {
       if (!this.isTimeSlowed) {
         this.isTimeSlowed = true;
@@ -1466,11 +1351,9 @@ class GameScene extends Phaser.Scene {
     ) {
       this.player.setVelocityY(-420);
     }
-
     if (this.wasd.down.isDown && !this.player.body.onFloor()) {
       this.player.setVelocityY(GlobalState.playerStats.speed);
     }
-
     if (Phaser.Input.Keyboard.JustDown(this.attackKey)) this.fireBullet();
     if (Phaser.Input.Keyboard.JustDown(this.saveKey)) {
       saveGame(this.currentCheckpoint.id);
@@ -1487,7 +1370,6 @@ class GameScene extends Phaser.Scene {
         y: this.player.y,
         hp: this.playerHp,
       });
-      // keeps the last position history only upto 3 seconds
       if (this.positionHistory.length > 30) this.positionHistory.shift();
       this.recordTimer = 0;
     }
@@ -1496,14 +1378,12 @@ class GameScene extends Phaser.Scene {
       Phaser.Input.Keyboard.JustDown(this.rewindKey) &&
       this.positionHistory.length > 0
     ) {
-      GlobalState.remainingTimeSec -= 120; // Cost of rewinding time is 2 minutes
-
+      GlobalState.remainingTimeSec -= 120;
       const oldState = this.positionHistory[0];
       this.player.setPosition(oldState.x, oldState.y);
       this.playerHp = oldState.hp;
       this.positionHistory = [];
-
-      this.cameras.main.flash(500, 0, 255, 255); // Cyan flash for time travel
+      this.cameras.main.flash(500, 0, 255, 255);
       this.showFloatingText(this.player.x, this.player.y, "TIME REWIND!");
     }
 
@@ -1514,9 +1394,7 @@ class GameScene extends Phaser.Scene {
 
   updateEnemyAI(enemy, delta) {
     if (enemy.attackCooldown > 0) enemy.attackCooldown -= delta;
-
     let speedMultiplier = 1;
-    // If less than 15 mins left, enemies enrage
     if (GlobalState.remainingTimeSec < 15 * 60) {
       speedMultiplier = 1.5;
       enemy.setTint(0xff0000);
@@ -1530,11 +1408,8 @@ class GameScene extends Phaser.Scene {
       this.player.x,
       this.player.y
     );
-
-    // Face the player
     enemy.flipX = this.player.x < enemy.x;
 
-    // Chase
     if (dist < 400 && dist > 50) {
       if (this.player.x < enemy.x)
         enemy.setVelocityX(-enemy.speed * speedMultiplier);
@@ -1543,7 +1418,6 @@ class GameScene extends Phaser.Scene {
       enemy.setVelocityX(0);
     }
 
-    // Magic Attack
     if (dist < 300 && dist > 100 && enemy.attackCooldown <= 0) {
       this.enemyFireMagic(enemy);
       enemy.attackCooldown = 2000;
@@ -1555,8 +1429,7 @@ class GameScene extends Phaser.Scene {
       const currentBossConfig =
         chapterBosses[GlobalState.chapter] || chapterBosses[1];
       const bossAttackAnimKey =
-        currentBossConfig.attackKey || `${currentBossConfig.key}_idle`; // Fallback to idle if no attack animation specified
-
+        currentBossConfig.attackKey || `${currentBossConfig.key}_idle`;
       enemy.play(bossAttackAnimKey);
       enemy.once(`animationcomplete-${bossAttackAnimKey}`, () => {
         if (enemy.active) {
@@ -1565,11 +1438,8 @@ class GameScene extends Phaser.Scene {
       });
     } else {
       enemy.play("enemy_attack_gif_anim");
-
-      // Use 'onComplete' to switch back to the 'enemy_walk' animation after the attack animation finishes.
       enemy.once("animationcomplete-enemy_attack_gif_anim", () => {
         if (enemy.active) {
-          // Only switch back if the enemy is still alive
           enemy.play("enemy_walk");
         }
       });
@@ -1581,7 +1451,7 @@ class GameScene extends Phaser.Scene {
 
   onPlayerHitEnemyBody(player, enemy) {
     if (enemy.attackCooldown <= 0) {
-      this.takeDamage(10); // All normal enemies deal 10 damage
+      this.takeDamage(10);
       enemy.attackCooldown = 1000;
       if (player.x < enemy.x) player.setVelocityX(-300);
       else player.setVelocityX(300);
@@ -1597,7 +1467,6 @@ class GameScene extends Phaser.Scene {
     this.playerHp -= amount;
     this.showFloatingText(this.player.x, this.player.y - 40, `-${amount} HP`);
     this.cameras.main.shake(100, 0.01);
-
     if (this.playerHp <= 0) {
       this.handlePlayerDeath();
     }
@@ -1665,7 +1534,6 @@ class GameScene extends Phaser.Scene {
   }
 
   showTimelineMemory(isPast) {
-    // Getting random memory or possible scenario based on timeline
     const memories = isPast ? timelineMemories.past : timelineMemories.future;
     const randomMemory = memories[Math.floor(Math.random() * memories.length)];
 
@@ -1727,7 +1595,6 @@ class GameScene extends Phaser.Scene {
       duration: 500,
       ease: "Power2",
     });
-
     this.tweens.add({
       targets: [overlay, memoryText, timelineLabel],
       alpha: 0,
@@ -1743,8 +1610,6 @@ class GameScene extends Phaser.Scene {
   }
 }
 
-// Game Over Scene
-
 class GameOverScene extends Phaser.Scene {
   constructor() {
     super("GameOverScene");
@@ -1752,7 +1617,6 @@ class GameOverScene extends Phaser.Scene {
   init(data) {
     this.reason = data.reason || "time";
   }
-
   create() {
     this.cameras.main.setBackgroundColor("#000");
     let msg = "";
@@ -1782,6 +1646,7 @@ class GameOverScene extends Phaser.Scene {
 
 const config = {
   type: Phaser.AUTO,
+  parent: "game-container",
   width: 960,
   height: 540,
   pixelArt: false,
@@ -1800,6 +1665,10 @@ const config = {
     HowToPlayScene,
     GameOverScene,
   ],
+  scale: {
+    mode: Phaser.Scale.FIT,
+    autoCenter: Phaser.Scale.CENTER_BOTH,
+  },
 };
 
 const game = new Phaser.Game(config);
