@@ -35,8 +35,8 @@ body {
 
 /* --- JOY-CONS COMMON --- */
 .joy-con {
-  width: 110px;
-  height: 410px;
+  width: 150px;
+  height: 590px;
   position: relative;
   z-index: 1;
   /* Matte finish with subtle noise/frost texture */
