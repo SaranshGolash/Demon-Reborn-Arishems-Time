@@ -415,8 +415,8 @@ class BootScene extends Phaser.Scene {
     this.anims.create({
       key: "player_idle",
       frames: this.anims.generateFrameNumbers("player", {
-        start: 0,
-        end: 0,
+        start: 1,
+        end: 8,
       }),
       frameRate: 1,
       repeat: -1,
@@ -424,8 +424,8 @@ class BootScene extends Phaser.Scene {
     this.anims.create({
       key: "player_run",
       frames: this.anims.generateFrameNumbers("player", {
-        start: 1,
-        end: 3,
+        start: 0,
+        end: 0,
       }),
       frameRate: 10,
       repeat: -1,
