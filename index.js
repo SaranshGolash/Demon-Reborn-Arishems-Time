@@ -631,8 +631,16 @@ class MainMenuScene extends Phaser.Scene {
   constructor() {
     super("MainMenuScene");
   }
+
+  preload() {
+    // 1. Load the background image
+    // Ensure you have a file named 'main_menu_bg.jpg' in your assets folder
+    this.load.image("main_menu_bg", "assets/main_menu_bg.jpg");
+    this.load.audio("evil_drone_sound", "sounds/evil-drone.mp3");
+  }
+
   create() {
-    this.cameras.main.setBackgroundColor("#150018");
+    // --- Audio Context Resume Logic ---
     if (
       this.sys.game.device.input.touch &&
       this.sys.game.device.input.touch.is_touched
@@ -652,19 +660,64 @@ class MainMenuScene extends Phaser.Scene {
       }
     });
 
+    // --- Background Music ---
     if (this.menuMusic) {
       this.menuMusic.stop();
     }
     this.menuMusic = this.sound.add("evil_drone_sound", { loop: true });
     this.menuMusic.play();
 
-    this.add
-      .text(480, 60, "Demon Reborn: Arishem's Time", {
-        fontSize: "28px",
-        color: "#ffffff",
-      })
-      .setOrigin(0.5);
+    // --- Background Image Setup ---
+    // Add the image centered on screen
+    const bg = this.add.image(
+      this.cameras.main.centerX,
+      this.cameras.main.centerY,
+      "main_menu_bg"
+    );
 
+    // Calculate scaling to ensure the image COVERS the whole screen (Aspect Fill)
+    const scaleX = this.cameras.main.width / bg.width;
+    const scaleY = this.cameras.main.height / bg.height;
+    const scale = Math.max(scaleX, scaleY);
+    bg.setScale(scale).setScrollFactor(0);
+
+    // Add a semi-transparent black overlay so the text is readable over the image
+    this.add.rectangle(
+      this.cameras.main.centerX,
+      this.cameras.main.centerY,
+      this.cameras.main.width,
+      this.cameras.main.height,
+      0x000000,
+      0.5 // 0.5 = 50% opacity
+    );
+
+    // --- Title Text Setup ---
+    // Main Title
+    this.add
+      .text(this.cameras.main.centerX, 80, "DEMON REBORN", {
+        fontSize: "64px",
+        fontFamily: "Impact, fantasy, Arial Black", // Uses thick font
+        color: "#ff0000", // Red
+        stroke: "#000000",
+        strokeThickness: 6,
+      })
+      .setOrigin(0.5)
+      .setShadow(4, 4, "#000000", 2, true, true);
+
+    // Subtitle
+    this.add
+      .text(this.cameras.main.centerX, 140, "ARISHEM'S TIME", {
+        fontSize: "32px",
+        fontFamily: "Arial",
+        color: "#FFD700", // Gold
+        stroke: "#000000",
+        strokeThickness: 4,
+        fontStyle: "bold",
+      })
+      .setOrigin(0.5)
+      .setShadow(2, 2, "#000000", 2, true, true);
+
+    // --- Menu Items ---
     this.menuItems = [
       "Play",
       "How to Play",
@@ -676,14 +729,20 @@ class MainMenuScene extends Phaser.Scene {
     this.selectedIndex = 0;
     this.menuTexts = [];
 
+    // Draw menu items lower down to avoid overlapping the large title
+    const menuStartY = 240;
+
     for (let i = 0; i < this.menuItems.length; i++) {
       const t = this.add
-        .text(480, 160 + i * 40, "", {
-          fontSize: "20px",
+        .text(this.cameras.main.centerX, menuStartY + i * 45, "", {
+          fontSize: "24px",
           color: "#dddddd",
+          stroke: "#000000",
+          strokeThickness: 3,
         })
         .setOrigin(0.5)
         .setInteractive({ useHandCursor: true });
+
       t.on("pointerdown", () => {
         this.selectedIndex = i;
         this.updateMenuVisuals();
@@ -701,15 +760,20 @@ class MainMenuScene extends Phaser.Scene {
       this.menuTexts.push(t);
     }
 
+    // Info Text (Bottom)
     this.infoText = this.add
-      .text(480, 430, "", {
+      .text(this.cameras.main.centerX, 500, "", {
         fontSize: "16px",
         color: "#ffff88",
         wordWrap: { width: 800 },
+        stroke: "#000000",
+        strokeThickness: 3,
       })
       .setOrigin(0.5);
+
     this.updateMenuVisuals("Use UP/DOWN and ENTER");
 
+    // --- Inputs ---
     this.cursors = this.input.keyboard.createCursorKeys();
     this.enterKey = this.input.keyboard.addKey(
       Phaser.Input.Keyboard.KeyCodes.ENTER
@@ -733,8 +797,10 @@ class MainMenuScene extends Phaser.Scene {
   updateMenuVisuals(extraInfo) {
     for (let i = 0; i < this.menuItems.length; i++) {
       const prefix = i === this.selectedIndex ? "> " : "  ";
+      // Update text and apply style based on selection
       this.menuTexts[i].setText(prefix + this.menuItems[i]).setStyle({
-        color: i === this.selectedIndex ? "#ffffff" : "#dddddd",
+        color: i === this.selectedIndex ? "#ffffff" : "#aaaaaa",
+        fontStyle: i === this.selectedIndex ? "bold" : "normal",
       });
     }
     const subStatus = GlobalState.isSubscribed ? "ACTIVE" : "LOCKED";
@@ -748,7 +814,9 @@ class MainMenuScene extends Phaser.Scene {
     const choice = this.menuItems[this.selectedIndex];
     if (choice === "Play") {
       resetNewGame();
-      this.scene.get("GameScene").currentCheckpoint = null;
+      const gameScene = this.scene.get("GameScene");
+      if (gameScene) gameScene.currentCheckpoint = null;
+
       if (GlobalState.chapter > 3 && !GlobalState.isSubscribed) {
         this.updateMenuVisuals("Subscription required!");
       } else {
