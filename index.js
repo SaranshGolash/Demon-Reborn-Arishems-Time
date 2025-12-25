@@ -994,9 +994,10 @@ class MainMenuScene extends Phaser.Scene {
         "Options: In a full game you can adjust audio, controls, etc."
       );
     } else if (choice === "Credits") {
-      this.updateMenuVisuals(
-        "Credits: Saransh Golash (Game Designer)\nCopyright Demon Reborn: Arishem's Time @2025"
-      );
+      if (this.menuMusic) {
+        this.menuMusic.stop();
+      }
+      this.scene.start("CreditsScene");
     }
   }
 }
@@ -1005,54 +1006,170 @@ class HowToPlayScene extends Phaser.Scene {
   constructor() {
     super("HowToPlayScene");
   }
-  create() {
-    this.cameras.main.setBackgroundColor("#150018");
-    this.add
-      .text(
-        this.cameras.main.width / 2,
-        this.cameras.main.height / 2 - 250,
-        "How to Play",
-        { fontSize: "40px", fill: "#FFD700" }
-      )
-      .setOrigin(0.5);
 
-    const instructions = [
-      "Use arrow keys to move the character.",
-      "Use spacebar key to hit enemies with magic bullets.",
-      "Use shift key to slow down the time\n(uses mana that recovers over time).\n",
-      "Use R key to rewind the player position by 3 seconds\n(uses 2 minutes of the remaining time).\n",
-      "Use T key to interact with the timeline to see a past memory or a future possible scenario.\nThere are object blocking the path unless you interact with it, you won't move forward.\n",
-      "Use enter key to skip the storylines.",
-      "Use esc key to pause the game.",
-      "In order to complete the game chapter,\nyou have to defeat the boss of that chapter.\n",
-      "Whenever the young mage(player) dies\n10 mins is warped from the remaining time to complete the chapter.\n",
-      "As the remaining time goes closer to 0 a reddish tint\nstarts to appear showcasing urgency and enraging enemies (enemies gets additional buff).\n",
-      "When remaining time is over the game ends,\nyou have to replay the game from the very start.\n",
+  preload() {
+    this.load.image("main_menu_bg", "assets/main_menu_bg.jpg");
+    this.load.audio("evil_drone_sound", "sounds/evil-drone.mp3");
+  }
+
+  create() {
+    // Background Setup
+    const bg = this.add.image(
+      this.cameras.main.centerX,
+      this.cameras.main.centerY,
+      "main_menu_bg"
+    );
+    const scaleX = this.cameras.main.width / bg.width;
+    const scaleY = this.cameras.main.height / bg.height;
+    const scale = Math.max(scaleX, scaleY);
+    bg.setScale(scale).setScrollFactor(0);
+
+    // Dark Overlay for text readability
+    this.add.rectangle(
+      this.cameras.main.centerX,
+      this.cameras.main.centerY,
+      this.cameras.main.width,
+      this.cameras.main.height,
+      0x000000,
+      0.75
+    );
+
+    // Audio Setup
+    if (this.menuMusic) {
+      this.menuMusic.stop();
+    }
+    this.menuMusic = this.sound.add("evil_drone_sound", { loop: true });
+    this.menuMusic.play();
+
+    // Title Text
+    this.add
+      .text(this.cameras.main.centerX, 60, "HOW TO PLAY", {
+        fontSize: "52px",
+        fontFamily: "Impact, fantasy, Arial Black",
+        color: "#ff0000",
+        stroke: "#000000",
+        strokeThickness: 6,
+      })
+      .setOrigin(0.5)
+      .setShadow(4, 4, "#000000", 2, true, true);
+
+    // Instructions Content
+    const controls = [
+      { key: "ARROW KEYS / WASD", desc: "Move the character" },
+      { key: "SPACEBAR", desc: "Fire magic bullets" },
+      { key: "SHIFT", desc: "Slow down time (Consumes Mana)" },
+      { key: "R KEY", desc: "Rewind time by 3s (Costs 2 mins of Timer)" },
+      { key: "T KEY", desc: "Interact with Time Rifts to switch timelines" },
+      { key: "ENTER", desc: "Skip storylines" },
+      { key: "ESC", desc: "Pause Game" },
     ];
 
-    let yOffset = -180;
-    instructions.forEach((instruction) => {
+    const mechanics = [
+      "• Defeat the Chapter Boss to proceed.",
+      "• Death warps 10 minutes from your remaining time.",
+      "• Red tint appears when time is running low (Enemies get stronger!).",
+      "• If time runs out, the timeline is consumed (Game Over).",
+    ];
+
+    // Spacing
+    let startY = 110;
+
+    // Controls section
+    this.add
+      .text(this.cameras.main.centerX, startY, "CONTROLS", {
+        fontSize: "14px",
+        fontFamily: "Impact",
+        color: "#FFD700",
+        stroke: "#000000",
+        strokeThickness: 3,
+      })
+      .setOrigin(0.5);
+
+    startY += 40;
+
+    controls.forEach((item) => {
+      const keyText = this.add
+        .text(this.cameras.main.centerX - 20, startY, item.key, {
+          fontSize: "14px",
+          fontFamily: "Arial",
+          color: "#FFD700",
+          fontStyle: "bold",
+          stroke: "#000000",
+          strokeThickness: 2,
+        })
+        .setOrigin(1, 0.5);
+
+      // Description
       this.add
-        .text(
-          this.cameras.main.width / 2,
-          this.cameras.main.height / 2 + yOffset,
-          "• " + instruction,
-          { fontSize: "14px", fill: "#fff" }
-        )
-        .setOrigin(0.5);
-      yOffset += 40;
+        .text(this.cameras.main.centerX + 10, startY, `:  ${item.desc}`, {
+          fontSize: "14px",
+          fontFamily: "Arial",
+          color: "#ffffff",
+          stroke: "#000000",
+          strokeThickness: 2,
+        })
+        .setOrigin(0, 0.5);
+
+      startY += 30;
     });
 
-    const backButton = this.add
-      .text(
-        this.cameras.main.width / 2,
-        this.cameras.main.height / 2 + 250,
-        "Back to Main Menu",
-        { fontSize: "20px", fill: "#FFD700" }
-      )
+    // Mechanics Section
+    startY += 20;
+    this.add
+      .text(this.cameras.main.centerX, startY, "GAME RULES", {
+        fontSize: "14px",
+        fontFamily: "Impact",
+        color: "#FFD700",
+        stroke: "#000000",
+        strokeThickness: 3,
+      })
+      .setOrigin(0.5);
+
+    startY += 35;
+
+    mechanics.forEach((text) => {
+      this.add
+        .text(this.cameras.main.centerX, startY, text, {
+          fontSize: "14px",
+          fontFamily: "Arial",
+          color: "#dddddd",
+          stroke: "#000000",
+          strokeThickness: 2,
+          align: "center",
+        })
+        .setOrigin(0.5);
+      startY += 25;
+    });
+
+    // Back Button
+    const backBtn = this.add
+      .text(this.cameras.main.centerX, startY, "BACK TO MENU", {
+        fontSize: "18px",
+        fontFamily: "Impact, fantasy",
+        color: "#ff0000",
+        stroke: "#ffffff",
+        strokeThickness: 1,
+      })
       .setOrigin(0.5)
       .setInteractive({ useHandCursor: true });
-    backButton.on("pointerdown", () => {
+
+    // Hover Effects
+    backBtn.on("pointerover", () =>
+      backBtn.setStyle({ color: "#ffffff", stroke: "#ff0000" })
+    );
+    backBtn.on("pointerout", () =>
+      backBtn.setStyle({ color: "#ff0000", stroke: "#ffffff" })
+    );
+
+    // Interaction
+    backBtn.on("pointerdown", () => {
+      this.menuMusic.stop();
+      this.scene.start("MainMenuScene");
+    });
+
+    // Esc Key Support
+    this.input.keyboard.on("keydown-ESC", () => {
+      this.menuMusic.stop();
       this.scene.start("MainMenuScene");
     });
   }
@@ -1858,6 +1975,145 @@ class GameScene extends Phaser.Scene {
   }
 }
 
+class CreditsScene extends Phaser.Scene {
+  constructor() {
+    super("CreditsScene");
+  }
+
+  preload() {
+    this.load.image("main_menu_bg", "assets/main_menu_bg.jpg");
+    this.load.audio("evil_drone_sound", "sounds/evil-drone.mp3");
+  }
+
+  create() {
+    // Background Setup
+    const bg = this.add.image(
+      this.cameras.main.centerX,
+      this.cameras.main.centerY,
+      "main_menu_bg"
+    );
+    const scaleX = this.cameras.main.width / bg.width;
+    const scaleY = this.cameras.main.height / bg.height;
+    const scale = Math.max(scaleX, scaleY);
+    bg.setScale(scale).setScrollFactor(0);
+
+    // Dark Overlay
+    this.add.rectangle(
+      this.cameras.main.centerX,
+      this.cameras.main.centerY,
+      this.cameras.main.width,
+      this.cameras.main.height,
+      0x000000,
+      0.7
+    );
+
+    // Audio Setup
+    if (this.creditsMusic) {
+      this.creditsMusic.stop();
+    }
+    this.creditsMusic = this.sound.add("evil_drone_sound", { loop: true });
+    this.creditsMusic.play();
+
+    // Title Text
+    this.add
+      .text(this.cameras.main.centerX, 50, "CREDITS", {
+        fontSize: "52px",
+        fontFamily: "Impact, fantasy, Arial Black",
+        color: "#ff0000",
+        stroke: "#000000",
+        strokeThickness: 6,
+      })
+      .setOrigin(0.5)
+      .setShadow(4, 4, "#000000", 2, true, true);
+
+    // Credits Content
+    const content = [
+      { role: "Game Design & Programming", name: "Saransh Golash" },
+      { role: "Storyline & Narrative", name: "Saransh Golash" },
+      { role: "Art Assets", name: "Itch.io Community" },
+      { role: "Sounds Assets", name: "Pixabay" },
+      { role: "Font Assets", name: "Google Fonts" },
+      { role: "Engine", name: "Phaser 3" },
+    ];
+
+    // Spacing
+    let startY = 100;
+    const pairGap = 25;
+    const sectionGap = 65;
+
+    content.forEach((item) => {
+      // Role
+      this.add
+        .text(this.cameras.main.centerX, startY, item.role, {
+          fontSize: "20px",
+          fontFamily: "Arial",
+          color: "#FFD700",
+          fontStyle: "bold",
+          stroke: "#000000",
+          strokeThickness: 3,
+        })
+        .setOrigin(0.5);
+
+      // Name
+      this.add
+        .text(this.cameras.main.centerX, startY + pairGap, item.name, {
+          fontSize: "16px",
+          fontFamily: "Verdana",
+          color: "#ffffff",
+          stroke: "#000000",
+          strokeThickness: 3,
+        })
+        .setOrigin(0.5);
+
+      startY += sectionGap;
+    });
+
+    // Back Button
+    const backBtn = this.add
+      .text(this.cameras.main.centerX, 490, "BACK TO MENU", {
+        fontSize: "24px",
+        fontFamily: "Impact, fantasy",
+        color: "#ff0000",
+        stroke: "#ffffff",
+        strokeThickness: 1,
+      })
+      .setOrigin(0.5)
+      .setInteractive({ useHandCursor: true });
+
+    // Hover Effects
+    backBtn.on("pointerover", () =>
+      backBtn.setStyle({ color: "#ffffff", stroke: "#ff0000" })
+    );
+    backBtn.on("pointerout", () =>
+      backBtn.setStyle({ color: "#ff0000", stroke: "#ffffff" })
+    );
+
+    // Interaction
+    backBtn.on("pointerdown", () => {
+      this.creditsMusic.stop();
+      this.scene.start("MainMenuScene");
+    });
+
+    // Copyright Footer
+    this.add
+      .text(
+        this.cameras.main.centerX,
+        520,
+        "© 2025 Demon Reborn: Arishem's Time",
+        {
+          fontSize: "12px",
+          color: "#aaaaaa",
+        }
+      )
+      .setOrigin(0.5);
+
+    this.input.keyboard.on("keydown-ESC", () => {
+      this.creditsMusic.stop();
+      this.scene.start("MainMenuScene");
+    });
+  }
+}
+
 class GameOverScene extends Phaser.Scene {
   constructor() {
     super("GameOverScene");
@@ -1911,6 +2167,7 @@ const config = {
     UIScene,
     PauseScene,
     HowToPlayScene,
+    CreditsScene,
     GameOverScene,
   ],
   scale: {
