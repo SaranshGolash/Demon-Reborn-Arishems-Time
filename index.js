@@ -1463,6 +1463,7 @@ class GameScene extends Phaser.Scene {
       ) {
         this.bossIntroSound.stop();
       }
+      this.scene.stop("UIScene");
 
       if (storylines[GlobalState.chapter]) {
         this.scene.start("StorylineScene", {
