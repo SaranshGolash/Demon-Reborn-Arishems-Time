@@ -490,8 +490,8 @@ class BootScene extends Phaser.Scene {
     this.anims.create({
       key: "player_idle",
       frames: this.anims.generateFrameNumbers("player", {
-        start: 1,
-        end: 8,
+        start: 0,
+        end: 0,
       }),
       frameRate: 1,
       repeat: -1,
@@ -834,13 +834,12 @@ class MainMenuScene extends Phaser.Scene {
       0.5 // 0.5 = 50% opacity
     );
 
-    // --- Title Text Setup ---
     // Main Title
     this.add
       .text(this.cameras.main.centerX, 80, "DEMON REBORN", {
         fontSize: "64px",
-        fontFamily: "Impact, fantasy, Arial Black", // Uses thick font
-        color: "#ff0000", // Red
+        fontFamily: "Impact, fantasy, Arial Black",
+        color: "#ff0000",
         stroke: "#000000",
         strokeThickness: 6,
       })
@@ -852,7 +851,7 @@ class MainMenuScene extends Phaser.Scene {
       .text(this.cameras.main.centerX, 140, "ARISHEM'S TIME", {
         fontSize: "32px",
         fontFamily: "Arial",
-        color: "#FFD700", // Gold
+        color: "#FFD700",
         stroke: "#000000",
         strokeThickness: 4,
         fontStyle: "bold",
@@ -860,7 +859,7 @@ class MainMenuScene extends Phaser.Scene {
       .setOrigin(0.5)
       .setShadow(2, 2, "#000000", 2, true, true);
 
-    // --- Menu Items ---
+    // Menu Items
     this.menuItems = [
       "Play",
       "How to Play",
@@ -872,7 +871,6 @@ class MainMenuScene extends Phaser.Scene {
     this.selectedIndex = 0;
     this.menuTexts = [];
 
-    // Draw menu items lower down to avoid overlapping the large title
     const menuStartY = 240;
 
     for (let i = 0; i < this.menuItems.length; i++) {
@@ -903,7 +901,7 @@ class MainMenuScene extends Phaser.Scene {
       this.menuTexts.push(t);
     }
 
-    // Info Text (Bottom)
+    // Info Text
     this.infoText = this.add
       .text(this.cameras.main.centerX, 500, "", {
         fontSize: "16px",
@@ -916,7 +914,7 @@ class MainMenuScene extends Phaser.Scene {
 
     this.updateMenuVisuals("Use UP/DOWN and ENTER");
 
-    // --- Inputs ---
+    // Inputs
     this.cursors = this.input.keyboard.createCursorKeys();
     this.enterKey = this.input.keyboard.addKey(
       Phaser.Input.Keyboard.KeyCodes.ENTER
@@ -1222,11 +1220,13 @@ class GameScene extends Phaser.Scene {
   constructor() {
     super("GameScene");
   }
+
   create() {
     this.levelWidth = 2400;
     this.physics.world.setBounds(0, 0, this.levelWidth, 540);
     this.cameras.main.setBounds(0, 0, this.levelWidth, 540);
 
+    // --- Audio Cleanup ---
     const introScene = this.scene.get("IntroScene");
     if (
       introScene &&
@@ -1235,24 +1235,22 @@ class GameScene extends Phaser.Scene {
     ) {
       introScene.introSound.stop();
     }
-
     if (this.chapterMusic) {
       this.chapterMusic.stop();
     }
+
+    // --- Audio Setup ---
     if (GlobalState.chapter === 1) {
-      this.chapterMusic = this.sound.add("evil_cue_sound", {
-        loop: true,
-      });
+      this.chapterMusic = this.sound.add("evil_cue_sound", { loop: true });
       this.chapterMusic.play();
     } else if (GlobalState.chapter === 2) {
-      this.chapterMusic = this.sound.add("chapter2_bg_music", {
-        loop: true,
-      });
+      this.chapterMusic = this.sound.add("chapter2_bg_music", { loop: true });
       this.chapterMusic.play();
     } else {
       this.chapterMusic = null;
     }
 
+    // --- Background ---
     const bgKey = `bg_${Math.min(GlobalState.chapter, 10)}`;
     this.background = this.add
       .tileSprite(0, 0, 960, 540, bgKey)
@@ -1261,12 +1259,14 @@ class GameScene extends Phaser.Scene {
     this.background.displayWidth = this.game.config.width;
     this.background.displayHeight = this.game.config.height;
 
+    // --- Ground/Platforms ---
     this.platforms = this.physics.add.staticGroup();
     this.platforms
       .create(this.levelWidth / 2, 520, "ground")
       .setDisplaySize(this.levelWidth, 40)
       .refreshBody();
 
+    // --- Player ---
     let startX = 100;
     if (this.currentCheckpoint) startX = this.currentCheckpoint.x;
 
@@ -1276,6 +1276,7 @@ class GameScene extends Phaser.Scene {
     this.physics.add.collider(this.player, this.platforms);
     this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
 
+    // --- Inputs ---
     this.cursors = this.input.keyboard.createCursorKeys();
     this.attackKey = this.input.keyboard.addKey(
       Phaser.Input.Keyboard.KeyCodes.SPACE
@@ -1284,18 +1285,12 @@ class GameScene extends Phaser.Scene {
     this.shiftKey = this.input.keyboard.addKey(
       Phaser.Input.Keyboard.KeyCodes.SHIFT
     );
-    this.isTimeSlowed = false;
-
-    this.positionHistory = [];
-    this.recordTimer = 0;
     this.rewindKey = this.input.keyboard.addKey(
       Phaser.Input.Keyboard.KeyCodes.R
     );
     this.timelineKey = this.input.keyboard.addKey(
       Phaser.Input.Keyboard.KeyCodes.T
     );
-    this.isFuture = true;
-
     this.wasd = {
       up: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W),
       left: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A),
@@ -1309,6 +1304,12 @@ class GameScene extends Phaser.Scene {
       this.scene.launch("PauseScene");
     });
 
+    this.isTimeSlowed = false;
+    this.positionHistory = [];
+    this.recordTimer = 0;
+    this.isFuture = true;
+
+    // --- Combat Groups ---
     this.bullets = this.physics.add.group({ allowGravity: false });
     this.enemyBullets = this.physics.add.group({ allowGravity: false });
     this.enemies = this.physics.add.group();
@@ -1338,10 +1339,10 @@ class GameScene extends Phaser.Scene {
       this
     );
 
+    // --- Level Elements ---
     this.checkpoints = this.physics.add.staticGroup();
     if (!this.currentCheckpoint)
       this.currentCheckpoint = { x: 100, y: 400, id: "start" };
-
     this.createCheckpoint(400, 460, "cp1");
     this.createCheckpoint(1200, 460, "cp2");
     this.createCheckpoint(1900, 460, "cp3");
@@ -1366,29 +1367,62 @@ class GameScene extends Phaser.Scene {
       this
     );
 
-    this.scene.launch("UIScene");
+    // --- OBSTACLE SETUP ---
     this.futurePlatforms = this.physics.add.staticGroup();
     this.pastPlatforms = this.physics.add.staticGroup();
 
-    this.pastPlatforms
-      .create(1600, 400, "ground")
-      .setDisplaySize(200, 40)
-      .refreshBody();
+    // 1. Future Wall (x=1000). Blocks path if we are in Future.
+    // We must switch to Past to remove this.
     this.futurePlatforms
       .create(1000, 350, "ground")
-      .setDisplaySize(40, 300)
+      .setDisplaySize(40, 300) // Vertical Wall
       .refreshBody();
 
+    // 2. Past Wall (x=1600). Blocks path if we are in Past.
+    // We must switch to Future to remove this.
+    this.pastPlatforms
+      .create(1600, 350, "ground")
+      .setDisplaySize(40, 300) // Vertical Wall (Changed from platform to wall)
+      .refreshBody();
+
+    // Initial State: Future is Active
     this.pastPlatforms.setVisible(false);
     this.pastPlatforms.setActive(false);
     this.futurePlatforms.setVisible(true);
     this.futurePlatforms.setActive(true);
 
+    // Initial Collider: Block player at Future Wall
     this.futureCollider = this.physics.add.collider(
       this.player,
       this.futurePlatforms
     );
     this.pastCollider = null;
+
+    // --- TIME RIFTS ---
+    this.timeRifts = this.physics.add.staticGroup();
+    // Rift at 900 (Before Future Wall at 1000)
+    this.createTimeRift(900, 450);
+    // Rift at 1500 (Before Past Wall at 1600)
+    this.createTimeRift(1500, 450);
+
+    this.scene.launch("UIScene");
+  }
+
+  createTimeRift(x, y) {
+    const rift = this.timeRifts.create(x, y, "portal");
+    rift.setScale(0.8);
+    rift.setTint(0x00ffff);
+    rift.refreshBody();
+
+    // Floating label
+    this.add
+      .text(x, y - 50, "TIME RIFT", {
+        fontSize: "12px",
+        color: "#00ffff",
+        stroke: "#000000",
+        strokeThickness: 2,
+      })
+      .setOrigin(0.5);
   }
 
   spawnEnemiesAndBoss() {
@@ -1453,9 +1487,8 @@ class GameScene extends Phaser.Scene {
       GlobalState.remainingTimeSec = GlobalState.chapterTimeLimit;
       this.currentCheckpoint = { x: 100, y: 400, id: "start" };
 
-      if (this.chapterMusic && this.chapterMusic.isPlaying) {
+      if (this.chapterMusic && this.chapterMusic.isPlaying)
         this.chapterMusic.stop();
-      }
       if (
         GlobalState.chapter === 1 &&
         this.bossIntroSound &&
@@ -1463,12 +1496,11 @@ class GameScene extends Phaser.Scene {
       ) {
         this.bossIntroSound.stop();
       }
+
       this.scene.stop("UIScene");
 
       if (storylines[GlobalState.chapter]) {
-        this.scene.start("StorylineScene", {
-          chapter: GlobalState.chapter,
-        });
+        this.scene.start("StorylineScene", { chapter: GlobalState.chapter });
       } else {
         this.scene.restart();
       }
@@ -1478,10 +1510,13 @@ class GameScene extends Phaser.Scene {
   toggleTimeline() {
     this.isFuture = !this.isFuture;
     if (this.isFuture) {
+      // Switch to Future: Show Future Wall (Blocker), Hide Past Wall
       this.pastPlatforms.setVisible(false);
       this.pastPlatforms.setActive(false);
       this.futurePlatforms.setVisible(true);
       this.futurePlatforms.setActive(true);
+
+      // Swap Colliders
       if (this.pastCollider) {
         this.pastCollider.destroy();
         this.pastCollider = null;
@@ -1494,10 +1529,13 @@ class GameScene extends Phaser.Scene {
       }
       this.showTimelineMemory(false);
     } else {
+      // Switch to Past: Show Past Wall (Blocker), Hide Future Wall
       this.futurePlatforms.setVisible(false);
       this.futurePlatforms.setActive(false);
       this.pastPlatforms.setVisible(true);
       this.pastPlatforms.setActive(true);
+
+      // Swap Colliders
       if (this.futureCollider) {
         this.futureCollider.destroy();
         this.futureCollider = null;
@@ -1518,12 +1556,9 @@ class GameScene extends Phaser.Scene {
     const totalTime = GlobalState.chapterTimeLimit;
     const remaining = GlobalState.remainingTimeSec;
     const percentLeft = remaining / totalTime;
-
     if (this.background) {
-      const r = Math.floor(255 * percentLeft + 255 * (1 - percentLeft));
       const gb = Math.floor(255 * percentLeft);
-      const color = Phaser.Display.Color.GetColor(255, gb, gb);
-      this.background.setTint(color);
+      this.background.setTint(Phaser.Display.Color.GetColor(255, gb, gb));
     }
 
     if (this.shiftKey.isDown && GlobalState.playerStats.mana > 0) {
@@ -1539,9 +1574,8 @@ class GameScene extends Phaser.Scene {
         this.physics.world.timeScale = 1.0;
         this.player.anims.timeScale = 1.0;
       }
-      if (GlobalState.playerStats.mana < 100) {
+      if (GlobalState.playerStats.mana < 100)
         GlobalState.playerStats.mana += 0.1;
-      }
     }
 
     if (this.cursors.left.isDown || this.wasd.left.isDown) {
@@ -1556,7 +1590,6 @@ class GameScene extends Phaser.Scene {
       this.player.setVelocityX(0);
       this.player.anims.play("player_idle", true);
     }
-
     if (
       (this.cursors.up.isDown || this.wasd.up.isDown) &&
       this.player.body.onFloor()
@@ -1566,14 +1599,29 @@ class GameScene extends Phaser.Scene {
     if (this.wasd.down.isDown && !this.player.body.onFloor()) {
       this.player.setVelocityY(GlobalState.playerStats.speed);
     }
+
     if (Phaser.Input.Keyboard.JustDown(this.attackKey)) this.fireBullet();
     if (Phaser.Input.Keyboard.JustDown(this.saveKey)) {
       saveGame(this.currentCheckpoint.id);
       this.showFloatingText(this.player.x, this.player.y - 50, "Saved!");
     }
+
+    // --- INTERACTION LOGIC ---
     if (Phaser.Input.Keyboard.JustDown(this.timelineKey)) {
-      this.toggleTimeline();
+      // Check if touching ANY rift
+      const isNearRift = this.physics.overlap(this.player, this.timeRifts);
+
+      if (isNearRift) {
+        this.toggleTimeline();
+      } else {
+        this.showFloatingText(
+          this.player.x,
+          this.player.y - 50,
+          "Find a Time Rift!"
+        );
+      }
     }
+    // -------------------------
 
     this.recordTimer += delta;
     if (this.recordTimer > 100) {
@@ -1585,7 +1633,6 @@ class GameScene extends Phaser.Scene {
       if (this.positionHistory.length > 30) this.positionHistory.shift();
       this.recordTimer = 0;
     }
-
     if (
       Phaser.Input.Keyboard.JustDown(this.rewindKey) &&
       this.positionHistory.length > 0
@@ -1613,7 +1660,6 @@ class GameScene extends Phaser.Scene {
     } else {
       enemy.clearTint();
     }
-
     const dist = Phaser.Math.Distance.Between(
       enemy.x,
       enemy.y,
@@ -1621,7 +1667,6 @@ class GameScene extends Phaser.Scene {
       this.player.y
     );
     enemy.flipX = this.player.x < enemy.x;
-
     if (dist < 400 && dist > 50) {
       if (this.player.x < enemy.x)
         enemy.setVelocityX(-enemy.speed * speedMultiplier);
@@ -1629,7 +1674,6 @@ class GameScene extends Phaser.Scene {
     } else {
       enemy.setVelocityX(0);
     }
-
     if (dist < 300 && dist > 100 && enemy.attackCooldown <= 0) {
       this.enemyFireMagic(enemy);
       enemy.attackCooldown = 2000;
@@ -1644,16 +1688,12 @@ class GameScene extends Phaser.Scene {
         currentBossConfig.attackKey || `${currentBossConfig.key}_idle`;
       enemy.play(bossAttackAnimKey);
       enemy.once(`animationcomplete-${bossAttackAnimKey}`, () => {
-        if (enemy.active) {
-          enemy.play(`${currentBossConfig.key}_idle`);
-        }
+        if (enemy.active) enemy.play(`${currentBossConfig.key}_idle`);
       });
     } else {
       enemy.play("enemy_attack_gif_anim");
       enemy.once("animationcomplete-enemy_attack_gif_anim", () => {
-        if (enemy.active) {
-          enemy.play("enemy_walk");
-        }
+        if (enemy.active) enemy.play("enemy_walk");
       });
     }
     const bullet = this.enemyBullets.create(enemy.x, enemy.y, "enemy_bullet");
@@ -1679,9 +1719,7 @@ class GameScene extends Phaser.Scene {
     this.playerHp -= amount;
     this.showFloatingText(this.player.x, this.player.y - 40, `-${amount} HP`);
     this.cameras.main.shake(100, 0.01);
-    if (this.playerHp <= 0) {
-      this.handlePlayerDeath();
-    }
+    if (this.playerHp <= 0) this.handlePlayerDeath();
   }
 
   handlePlayerDeath() {
@@ -1715,9 +1753,7 @@ class GameScene extends Phaser.Scene {
       enemy.y - 30,
       `-${GlobalState.playerStats.attack}`
     );
-    if (enemy.hp <= 0) {
-      enemy.destroy();
-    }
+    if (enemy.hp <= 0) enemy.destroy();
   }
 
   fireBullet() {
