@@ -25,151 +25,225 @@ const introText = {
 
 const storylines = {
   1: [
-    { speaker: "Narrator", text: "A new adventure begins..." },
+    { speaker: "Narrator", text: "A new adventure begins...", portrait: null },
     {
       speaker: "Narrator",
-      text: "Upon years of Arishem reign over the demon world, a young mage was reincarnated to a low life family. He used to see Arishem's armys terror and when he was 10 years old Arishem had his father killed for rebelling against him. Ever since then the young mage has been leading the rebellion solely by himself and has dark revenge desires too. How will this story unfold? Let's find out.",
+      text: "Upon years of Arishem reign over the demon world, a young mage was reincarnated to a low life family. He used to see Arishem's armys terror and when he was 10 years old Arishem had his father killed for rebelling against him.",
+      portrait: null,
+    },
+    {
+      speaker: "Narrator",
+      text: "Ever since then the young mage has been leading the rebellion solely by himself and has dark revenge desires too. How will this story unfold? Let's find out.",
+      portrait: null,
     },
     {
       speaker: "Arishem",
       text: "Hahahaha! This is my territory. You dare think that you could stop my quest to become god-emperor.",
+      portrait: "boss",
     },
     {
       speaker: "Young Mage",
       text: "The cries of the innocent echo in my soul, Arishem! Your tyranny ends today!",
+      portrait: "player",
     },
-    { speaker: "Narrator", text: "Chapter 1: Whispers of Rebellion" },
+    {
+      speaker: "Narrator",
+      text: "Chapter 1: Whispers of Rebellion",
+      portrait: null,
+    },
   ],
   2: [
     {
       speaker: "Narrator",
       text: "The chilling winds of the Lava Caverns howl, carrying tales of Arishem's growing power. The Young Mage, fueled by vengeance, presses onward.",
+      portrait: null,
     },
     {
       speaker: "Young Mage",
       text: "Every step through this molten landscape burns with the memory of my father. Arishem will pay!",
+      portrait: "player",
     },
-    { speaker: "Narrator", text: "Chapter 2: The Scorched Path" },
+    {
+      speaker: "Narrator",
+      text: "Chapter 2: The Scorched Path",
+      portrait: null,
+    },
   ],
   3: [
     {
       speaker: "Narrator",
       text: "Deep within the Lava Caverns, an ancient power stirs. The air crackles with dark magic as the Young Mage approaches a formidable foe.",
+      portrait: null,
     },
     {
       speaker: "Arishem",
       text: "So, you've made it this far, mortal. Your insolence knows no bounds! Prepare to face the true might of Arishem's vanguard!",
+      portrait: "boss",
     },
     {
       speaker: "Young Mage",
       text: "I will not yield! The fate of the realms rests on my shoulders. I will strike down your tyranny!",
+      portrait: "player",
     },
-    { speaker: "Narrator", text: "Chapter 3: The Crimson Forge" },
+    {
+      speaker: "Narrator",
+      text: "Chapter 3: The Crimson Forge",
+      portrait: null,
+    },
   ],
   4: [
     {
       speaker: "Narrator",
       text: "Emerging from the fiery depths, the Young Mage finds himself in a desolate, war-torn landscape. The whispers of despair hang heavy in the air.",
+      portrait: null,
     },
     {
       speaker: "Mysterious Voice",
       text: "The path you tread is fraught with peril, Young Mage. Many have fallen before you. Do you possess the will to endure?",
+      portrait: null,
     },
     {
       speaker: "Young Mage",
       text: "I fight for those who cannot! My will is unbreakable. Who are you?",
+      portrait: "player",
     },
-    { speaker: "Narrator", text: "Chapter 4: The Shattered Plains" },
+    {
+      speaker: "Narrator",
+      text: "Chapter 4: The Shattered Plains",
+      portrait: null,
+    },
   ],
   5: [
     {
       speaker: "Narrator",
       text: "The Shattered Plains reveal the true scale of Arishem's destruction. Entire civilizations lie in ruins, a testament to his ruthless power.",
+      portrait: null,
     },
     {
       speaker: "Arishem's General",
       text: "You are but a nuisance, a flickering candle in the coming storm. Your rebellion ends here!",
+      portrait: "demon_general",
     },
     {
       speaker: "Young Mage",
       text: "I am the storm! You will fall, just as Arishem will!",
+      portrait: "player",
     },
-    { speaker: "Narrator", text: "Chapter 5: The Citadel of Whispers" },
+    {
+      speaker: "Narrator",
+      text: "Chapter 5: The Citadel of Whispers",
+      portrait: null,
+    },
   ],
   6: [
     {
       speaker: "Narrator",
       text: "Within the dark spires of the Citadel, forbidden knowledge and ancient evils reside. The Young Mage must navigate its treacherous halls.",
+      portrait: null,
     },
     {
       speaker: "Ancient Guardian",
       text: "Few have ever breached these walls. Your courage is admirable, but futile. Turn back, or face oblivion.",
+      portrait: "demon_general",
     },
     {
       speaker: "Young Mage",
       text: "My resolve is unshaken. I will face any challenge to reach Arishem!",
+      portrait: "player",
     },
-    { speaker: "Narrator", text: "Chapter 6: The Shadowed Ascent" },
+    {
+      speaker: "Narrator",
+      text: "Chapter 6: The Shadowed Ascent",
+      portrait: null,
+    },
   ],
   7: [
     {
       speaker: "Narrator",
       text: "The ascent to Arishem's throne is protected with his most devoted followers. Each step is a battle against overwhelming odds.",
+      portrait: null,
     },
     {
       speaker: "Arishem's Elite Guard",
       text: "The Demon Lord awaits no one. You will perish here, an insignificant speck against his might.",
+      portrait: "demon_general",
     },
     {
       speaker: "Young Mage",
       text: "Then I shall make my mark! For freedom!",
+      portrait: "player",
     },
-    { speaker: "Narrator", text: "Chapter 7: The Throne of Tyranny" },
+    {
+      speaker: "Narrator",
+      text: "Chapter 7: The Throne of Tyranny",
+      portrait: null,
+    },
   ],
   8: [
     {
       speaker: "Narrator",
       text: "Finally, the Young Mage stands before Arishem, the source of all suffering. The ultimate confrontation is at hand.",
+      portrait: null,
     },
     {
       speaker: "Arishem",
       text: "You truly amuse me, child. Did you honestly believe you could stand against a god? Now, witness true power!",
+      portrait: "boss",
     },
     {
       speaker: "Young Mage",
       text: "You are no god, Arishem! Just a tyrant! I will bring you down!",
+      portrait: "player",
     },
-    { speaker: "Narrator", text: "Chapter 8: The God-Emperor's Fall" },
+    {
+      speaker: "Narrator",
+      text: "Chapter 8: The God-Emperor's Fall",
+      portrait: null,
+    },
   ],
   9: [
     {
       speaker: "Narrator",
       text: "With Arishem defeated, the world begins to heal, but new threats emerge from the power vacuum. The Young Mage's journey is far from over.",
+      portrait: null,
     },
     {
       speaker: "Elder Council",
       text: "The realms owe you a debt, hero. But the balance is fragile. A new darkness gathers on the horizon.",
+      portrait: null,
     },
     {
       speaker: "Young Mage",
       text: "I will stand ready. For peace, for justice, always.",
+      portrait: "player",
     },
-    { speaker: "Narrator", text: "Chapter 9: Echoes of a New Dawn" },
+    {
+      speaker: "Narrator",
+      text: "Chapter 9: Echoes of a New Dawn",
+      portrait: null,
+    },
   ],
   10: [
     {
       speaker: "Narrator",
       text: "The final chapter. A grand prophecy unfolds, revealing the true destiny of the Young Mage and the ultimate fate of the Demon Realm.",
+      portrait: null,
     },
     {
       speaker: "Ancient Prophecy",
       text: "From the ashes of tyranny, a new guardian shall rise, wielding the light and shadow to forever safeguard the realms.",
+      portrait: null,
     },
     {
       speaker: "Young Mage",
       text: "This is my purpose. This is my legacy. The Demon Realm will know peace.",
+      portrait: null,
     },
-    { speaker: "Narrator", text: "Chapter 10: The Eternal Guardian" },
+    {
+      speaker: "Narrator",
+      text: "Chapter 10: The Eternal Guardian",
+      portrait: null,
+    },
   ],
 };
 
@@ -396,6 +470,7 @@ class BootScene extends Phaser.Scene {
       this.load.image(`bg_${i}`, filename);
     }
 
+    this.load.image("demon_general", "assets/demon_general.jpg");
     this.load.image("ground", "assets/ground.png");
     this.load.image("bullet", "assets/bullet.png");
     this.load.image("enemy_bullet", "assets/purple_ball.png");
@@ -504,25 +579,57 @@ class StorylineScene extends Phaser.Scene {
     this.dialogueIndex = 0;
     this.currentStoryline = storylines[this.chapter] || [];
 
-    this.dialogueText = this.add.text(50, 400, "", {
+    const bgKey = `bg_${Math.min(this.chapter, 10)}`;
+    if (this.textures.exists(bgKey)) {
+      const bg = this.add.image(480, 270, bgKey).setAlpha(0.3);
+      const scaleX = 960 / bg.width;
+      const scaleY = 540 / bg.height;
+      bg.setScale(Math.max(scaleX, scaleY));
+    }
+
+    // Portrait
+
+    this.portrait = this.add.sprite(0, 0, "player");
+    this.portrait.setVisible(false);
+    this.portrait.setAlpha(0);
+
+    // Dialogue Box Graphics
+
+    const graphics = this.add.graphics();
+    graphics.fillStyle(0x111111, 0.9);
+    graphics.lineStyle(4, 0xffffff, 1);
+    graphics.fillRect(50, 350, 860, 150);
+    graphics.strokeRect(50, 350, 860, 150);
+
+    this.speakerText = this.add.text(70, 320, "", {
+      fontSize: "28px",
+      color: "#FFD700",
+      fontStyle: "bold",
+      stroke: "#000000",
+      strokeThickness: 4,
+    });
+
+    this.dialogueText = this.add.text(70, 370, "", {
       fontSize: "20px",
       color: "#ffffff",
-      wordWrap: { width: 860 },
-      backgroundColor: "#000000AA",
-      padding: { x: 10, y: 10 },
+      wordWrap: { width: 760 },
+      lineSpacing: 5,
     });
-    this.speakerText = this.add.text(50, 370, "", {
-      fontSize: "24px",
-      color: "#ffff00",
-      backgroundColor: "#000000AA",
-      padding: { x: 10, y: 5 },
-    });
+
     this.continueText = this.add
-      .text(800, 500, "Press ENTER", {
+      .text(880, 470, "PRESS ENTER ▼", {
         fontSize: "16px",
-        color: "#cccccc",
+        color: "#00ff00",
       })
-      .setOrigin(0.5);
+      .setOrigin(1, 0);
+
+    this.tweens.add({
+      targets: this.continueText,
+      alpha: 0,
+      duration: 800,
+      yoyo: true,
+      repeat: -1,
+    });
 
     this.input.keyboard.on("keydown-ENTER", this.advanceDialogue, this);
     this.input.on("pointerdown", this.advanceDialogue, this);
@@ -533,28 +640,64 @@ class StorylineScene extends Phaser.Scene {
   showDialogue() {
     if (this.dialogueIndex < this.currentStoryline.length) {
       const line = this.currentStoryline[this.dialogueIndex];
+      if (line.portrait) {
+        this.portrait.setVisible(true);
+        this.portrait.setTexture(line.portrait);
+        this.portrait.setFrame(0);
+        this.portrait.setAlpha(0);
+
+        // Dynamic Scaling
+        if (line.portrait === "boss") {
+          this.portrait.setScale(4); // 64 * 4 = 256px
+        } else {
+          this.portrait.setScale(2); // 128 * 2 = 256px
+        }
+
+        // Position: Hero Left, Villain Right
+        if (line.speaker === "Young Mage") {
+          this.portrait.setX(200);
+          this.portrait.setY(260);
+          this.portrait.setFlipX(false);
+        } else {
+          // Villains
+          this.portrait.setX(760);
+          this.portrait.setY(260);
+          this.portrait.setFlipX(true); // Flip villain to face left
+        }
+
+        // Animate Fade In
+        this.tweens.add({
+          targets: this.portrait,
+          alpha: 1,
+          y: 240, // Slight slide up effect
+          duration: 300,
+          ease: "Power2",
+        });
+      } else {
+        // Hide portrait for narrator
+        this.portrait.setVisible(false);
+      }
+
       this.speakerText.setText(line.speaker);
       this.typewriteText(line.text);
     } else {
       this.scene.start("GameScene");
     }
   }
+
   advanceDialogue() {
     if (this.isAnimatingText) {
       if (this.typewriterTimer) {
         this.typewriterTimer.remove();
       }
-      if (this.dialogueIndex < this.currentStoryline.length) {
-        this.dialogueText.setText(
-          this.currentStoryline[this.dialogueIndex].text
-        );
-      }
+      this.dialogueText.setText(this.currentStoryline[this.dialogueIndex].text);
       this.isAnimatingText = false;
     } else {
       this.dialogueIndex++;
       this.showDialogue();
     }
   }
+
   typewriteText(text) {
     this.isAnimatingText = true;
     this.dialogueText.setText("");
@@ -570,7 +713,7 @@ class StorylineScene extends Phaser.Scene {
         }
       },
       callbackScope: this,
-      delay: 50,
+      delay: 30,
       loop: true,
     });
   }
